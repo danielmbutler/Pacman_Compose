@@ -3,6 +3,7 @@ package com.dbtechprojects.pacmancompose
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,6 +29,8 @@ import com.dbtechprojects.pacmancompose.ui.theme.*
 import kotlinx.coroutines.*
 
 class MainActivity : ComponentActivity() {
+
+     val gameViewModel: GameViewModel by viewModels()
     @InternalCoroutinesApi
     @ExperimentalFoundationApi
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,8 +40,8 @@ class MainActivity : ComponentActivity() {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
                     val gameStarted = remember {mutableStateOf(false)}
-                    val characterYLeftOffset = remember { mutableStateOf(0f)}
-                    val characterXLeftOffset = remember { mutableStateOf(0f)}
+                    val characterYOffset = remember { mutableStateOf(0f)}
+                    val characterXOffset = remember { mutableStateOf(0f)}
                     Column(
                         modifier = Modifier
                             .background(color = PacmanBackground)
@@ -55,13 +59,15 @@ class MainActivity : ComponentActivity() {
                         )
                         GameBorder(
                             gameStarted = gameStarted,
-                            characterXOffset = characterXLeftOffset,
-                            characterYLeftOffset = characterYLeftOffset
+                            characterXOffset = characterXOffset,
+                            characterYOffset = characterYOffset,
+                            gameViewModel = gameViewModel
                         )
                         Controls(
                             gameStarted,
-                            characterXOffset = characterXLeftOffset,
-                            characterYLeftOffset = characterYLeftOffset
+                            characterXOffset = characterXOffset,
+                            characterYOffset = characterYOffset,
+                            gameViewModel = gameViewModel
                         )
                     }
                 }
@@ -74,8 +80,10 @@ class MainActivity : ComponentActivity() {
 fun GameBorder(
     gameStarted: MutableState<Boolean>,
     characterXOffset: MutableState<Float>,
-    characterYLeftOffset: MutableState<Float>,
+    characterYOffset: MutableState<Float>,
+    gameViewModel: GameViewModel
 ) {
+    val characterStartAngle by gameViewModel.characterStartAngle.observeAsState()
     Box(
         modifier = Modifier
             .border(6.dp, color = PacmanRed)
@@ -112,10 +120,10 @@ fun GameBorder(
 
             drawArc(
                 color = Color.Yellow,
-                startAngle = 25f,
+                startAngle = characterStartAngle ?: 30f,
                 sweepAngle = if (gameStarted.value) mouthAnimation else 360f * animateFloat.value,
                 useCenter = true,
-                topLeft = Offset(size.width / 2 + characterXOffset.value, size.height / 2 + characterYLeftOffset.value),
+                topLeft = Offset(size.width / 2 + characterXOffset.value, size.height / 2 + characterYOffset.value),
                 size = Size(
                     radius * 2,
                     radius * 2
@@ -133,10 +141,12 @@ fun GameBorder(
 @Composable
 fun Controls(
     gameStarted: MutableState<Boolean>,
-    characterYLeftOffset: MutableState<Float>,
-    characterXOffset: MutableState<Float>, ) {
+    characterYOffset: MutableState<Float>,
+    characterXOffset: MutableState<Float>,
+    gameViewModel: GameViewModel
+) {
 
-    val viewModel = GameViewModel()
+
     Row(
         horizontalArrangement = Arrangement.SpaceAround,
         modifier = Modifier
@@ -155,6 +165,17 @@ fun Controls(
                         start.linkTo(leftArrow.end)
                     }
                     .size(30.dp)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onPress = {
+                                if (gameStarted.value) {
+                                    gameViewModel.upPress(characterYOffset)
+                                    tryAwaitRelease()
+                                    gameViewModel.releaseUp()
+                                }
+                            }
+                        )
+                    }
             )
 
             Image(painter = painterResource(id = R.drawable.arrow_left),
@@ -165,6 +186,17 @@ fun Controls(
                         bottom.linkTo(parent.bottom)
                     }
                     .size(30.dp)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onPress = {
+                                if (gameStarted.value) {
+                                    gameViewModel.leftPress(characterXOffset)
+                                    tryAwaitRelease()
+                                    gameViewModel.releaseLeft()
+                                }
+                            }
+                        )
+                    }
             )
             Image(painter = painterResource(id = R.drawable.arrow_right),
                 contentDescription = "Right Arrow",
@@ -174,13 +206,14 @@ fun Controls(
                         bottom.linkTo(parent.bottom)
                     }
                     .size(30.dp)
-                    .pointerInput(Unit){
+                    .pointerInput(Unit) {
                         detectTapGestures(
                             onPress = {
-                                viewModel.leftPress(characterXOffset)
-                                tryAwaitRelease()
-                                viewModel.releaseLeft()
-
+                                if (gameStarted.value) {
+                                    gameViewModel.rightPress(characterXOffset)
+                                    tryAwaitRelease()
+                                    gameViewModel.releaseRight()
+                                }
                             }
                         )
                     }
@@ -194,6 +227,17 @@ fun Controls(
                         start.linkTo(leftArrow.end)
                     }
                     .size(30.dp)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onPress = {
+                                if (gameStarted.value) {
+                                    gameViewModel.downPress(characterYOffset)
+                                    tryAwaitRelease()
+                                    gameViewModel.releaseDown()
+                                }
+                            }
+                        )
+                    }
             )
         }
 

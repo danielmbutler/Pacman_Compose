@@ -66,4 +66,7 @@ dependencies {
 
     // Foundation (Border, Background, Box, Image, Scroll, shapes, animations, etc.)
     implementation("androidx.compose.foundation:foundation:1.0.0-beta09")
+
+    // livedata in Compose
+    implementation 'androidx.compose.runtime:runtime-livedata:1.0.0-beta09'
 }
