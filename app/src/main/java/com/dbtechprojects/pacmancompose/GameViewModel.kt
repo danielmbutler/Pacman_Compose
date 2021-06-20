@@ -12,8 +12,6 @@ import kotlinx.coroutines.*
 class GameViewModel : ViewModel() {
 
     private val TAG = "GameViewModel"
-    private var canvasHeight = 0f
-    private var canvasWidth = 0f
     private var leftPress: Boolean = false
     private var rightPress: Boolean = false
     private var downPress: Boolean = false

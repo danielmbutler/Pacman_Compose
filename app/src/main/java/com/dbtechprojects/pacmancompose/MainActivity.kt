@@ -1,6 +1,8 @@
 package com.dbtechprojects.pacmancompose
 
 import android.os.Bundle
+import android.util.Log
+import android.util.Range
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -25,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.dbtechprojects.pacmancompose.models.PacFood
 import com.dbtechprojects.pacmancompose.ui.theme.*
 import kotlinx.coroutines.*
 
@@ -42,6 +45,7 @@ class MainActivity : ComponentActivity() {
                     val gameStarted = remember {mutableStateOf(false)}
                     val characterYOffset = remember { mutableStateOf(0f)}
                     val characterXOffset = remember { mutableStateOf(0f)}
+                    val pacFoodState = remember { PacFood() }
                     Column(
                         modifier = Modifier
                             .background(color = PacmanBackground)
@@ -61,7 +65,8 @@ class MainActivity : ComponentActivity() {
                             gameStarted = gameStarted,
                             characterXOffset = characterXOffset,
                             characterYOffset = characterYOffset,
-                            gameViewModel = gameViewModel
+                            gameViewModel = gameViewModel,
+                            pacFoodState
                         )
                         Controls(
                             gameStarted,
@@ -69,6 +74,28 @@ class MainActivity : ComponentActivity() {
                             characterYOffset = characterYOffset,
                             gameViewModel = gameViewModel
                         )
+                    }
+                    if (gameStarted.value)
+                    {
+                        // Collision Check
+                            val characterX = 958.0f / 2 + characterXOffset.value
+                            val characterY = 1290.0f / 2 + characterYOffset.value
+                        pacFoodState.foodList.forEach { foodModel  ->
+                            Log.d("pacfood", "foodModel y: ${foodModel.yPos.toFloat()}, " +
+                                    "characterOffset y: ${1290.0f / 2 + characterYOffset.value}, " +
+                                    "foodModel x: ${foodModel.xPos.toFloat()}" +
+                                    "characterOffset x: ${ 958.0f / 2 + characterXOffset.value}")
+                            if (
+                                Range.create(characterX, characterX + 100).contains(foodModel.xPos.toFloat()) &&
+                                Range.create(characterY, characterY + 100).contains(foodModel.yPos.toFloat())
+                            )
+                            {
+                                // redraw outside box with 0 size and increment score by 1
+                                foodModel.xPos = 1000
+                                foodModel.yPos = 2000
+                                Log.d("pacfood", "onCreate: collision ")
+                            }
+                        }
                     }
                 }
             }
@@ -81,7 +108,8 @@ fun GameBorder(
     gameStarted: MutableState<Boolean>,
     characterXOffset: MutableState<Float>,
     characterYOffset: MutableState<Float>,
-    gameViewModel: GameViewModel
+    gameViewModel: GameViewModel,
+    pacFoodState: PacFood
 ) {
     val characterStartAngle by gameViewModel.characterStartAngle.observeAsState()
     Box(
@@ -89,7 +117,6 @@ fun GameBorder(
             .border(6.dp, color = PacmanRed)
             .padding(6.dp)
     ) {
-
         val radius = 50f
         val animateFloat = remember { androidx.compose.animation.core.Animatable(0f) }
         LaunchedEffect(animateFloat) {
@@ -116,6 +143,7 @@ fun GameBorder(
         ) {
             val height = this.size.height
             val width = this.size.width
+            Log.d("canvas", "width: $width, height: $height ")
 
 
             drawArc(
@@ -131,6 +159,22 @@ fun GameBorder(
                 style = Fill,
 
                 )
+            for(i in pacFoodState.foodList){
+                drawArc(
+                    color = Color.Yellow,
+                    startAngle = characterStartAngle ?: 30f,
+                    sweepAngle =  360f,
+                    useCenter = true,
+                    topLeft = Offset(i.xPos.toFloat(), i.yPos.toFloat()),
+                    size = Size(
+                        radius * i.size,
+                        radius * i.size
+                    ),
+                    style = Fill,
+
+                    )
+            }
+
 
         }
     }
