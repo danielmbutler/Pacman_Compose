@@ -14,12 +14,12 @@ data class PacFood(
     private fun initPacFoodList() {
         foodList.clear()
 
-        var foodCount = 100
+        val foodCount = 100
 
         for (i in 0 until foodCount) {
             val food = PacFoodModel(
-                xPos = Random.nextInt(0, 850), // should not be hard coded
-                yPos = Random.nextInt(0, 1000),
+                xPos = Random.nextInt(55, 850), // should not be hard coded
+                yPos = Random.nextInt(55, 1200),
                 size = 0.5f
             )
             Log.w("food", "${food.xPos}")

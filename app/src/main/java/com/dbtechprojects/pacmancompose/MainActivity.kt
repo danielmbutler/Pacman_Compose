@@ -1,5 +1,6 @@
 package com.dbtechprojects.pacmancompose
 
+import android.content.res.Resources
 import android.os.Bundle
 import android.util.Log
 import android.util.Range
@@ -19,9 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -38,6 +41,7 @@ class MainActivity : ComponentActivity() {
     @ExperimentalFoundationApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             PacmanComposeTheme {
                 // A surface container using the 'background' color from the theme
@@ -66,7 +70,8 @@ class MainActivity : ComponentActivity() {
                             characterXOffset = characterXOffset,
                             characterYOffset = characterYOffset,
                             gameViewModel = gameViewModel,
-                            pacFoodState
+                            pacFoodState,
+                            resources
                         )
                         Controls(
                             gameStarted,
@@ -75,28 +80,38 @@ class MainActivity : ComponentActivity() {
                             gameViewModel = gameViewModel
                         )
                     }
-                    if (gameStarted.value)
-                    {
-                        // Collision Check
-                            val characterX = 958.0f / 2 + characterXOffset.value
-                            val characterY = 1290.0f / 2 + characterYOffset.value
-                        pacFoodState.foodList.forEach { foodModel  ->
-                            Log.d("pacfood", "foodModel y: ${foodModel.yPos.toFloat()}, " +
-                                    "characterOffset y: ${1290.0f / 2 + characterYOffset.value}, " +
-                                    "foodModel x: ${foodModel.xPos.toFloat()}" +
-                                    "characterOffset x: ${ 958.0f / 2 + characterXOffset.value}")
-                            if (
-                                Range.create(characterX, characterX + 100).contains(foodModel.xPos.toFloat()) &&
-                                Range.create(characterY, characterY + 100).contains(foodModel.yPos.toFloat())
-                            )
-                            {
-                                // redraw outside box with 0 size and increment score by 1
-                                foodModel.xPos = 1000
-                                foodModel.yPos = 2000
-                                Log.d("pacfood", "onCreate: collision ")
-                            }
-                        }
-                    }
+
+                    collisionDetectionMonitor(gameStarted, characterXOffset, characterYOffset, pacFoodState)
+                }
+            }
+        }
+    }
+
+    private fun collisionDetectionMonitor(
+        gameStarted: MutableState<Boolean>,
+        characterXOffset: MutableState<Float>,
+        characterYOffset: MutableState<Float>,
+        pacFoodState: PacFood
+    ){
+        if (gameStarted.value)
+        {
+            // Collision Check
+            val characterX = 958.0f / 2 + characterXOffset.value
+            val characterY = 1290.0f / 2 + characterYOffset.value
+            pacFoodState.foodList.forEach { foodModel  ->
+                Log.d("pacfood", "foodModel y: ${foodModel.yPos.toFloat()}, " +
+                        "characterOffset y: ${1290.0f / 2 + characterYOffset.value}, " +
+                        "foodModel x: ${foodModel.xPos.toFloat()}" +
+                        "characterOffset x: ${ 958.0f / 2 + characterXOffset.value}")
+                if (
+                    Range.create(characterX, characterX + 100).contains(foodModel.xPos.toFloat()) &&
+                    Range.create(characterY, characterY + 100).contains(foodModel.yPos.toFloat())
+                )
+                {
+                    // redraw outside box with 0 size and increment score by 1
+                    foodModel.xPos = 1000
+                    foodModel.yPos = 2000
+                    Log.d("pacfood", "onCreate: collision ")
                 }
             }
         }
@@ -109,7 +124,8 @@ fun GameBorder(
     characterXOffset: MutableState<Float>,
     characterYOffset: MutableState<Float>,
     gameViewModel: GameViewModel,
-    pacFoodState: PacFood
+    pacFoodState: PacFood,
+    resources: Resources
 ) {
     val characterStartAngle by gameViewModel.characterStartAngle.observeAsState()
     Box(
@@ -145,7 +161,7 @@ fun GameBorder(
             val width = this.size.width
             Log.d("canvas", "width: $width, height: $height ")
 
-
+            // character
             drawArc(
                 color = Color.Yellow,
                 startAngle = characterStartAngle ?: 30f,
@@ -159,13 +175,21 @@ fun GameBorder(
                 style = Fill,
 
                 )
+
+            // Enemy
+            drawImage(
+                image = ImageBitmap.imageResource(res = resources, R.drawable.ghost_red),
+                topLeft = Offset(size.width / 2 -90f , size.height / 2 + 60f )
+            )
+
+            // food
             for(i in pacFoodState.foodList){
                 drawArc(
                     color = Color.Yellow,
                     startAngle = characterStartAngle ?: 30f,
                     sweepAngle =  360f,
                     useCenter = true,
-                    topLeft = Offset(i.xPos.toFloat(), i.yPos.toFloat()),
+                    topLeft = Offset( i.xPos.toFloat(), i.yPos.toFloat()),
                     size = Size(
                         radius * i.size,
                         radius * i.size
@@ -174,6 +198,38 @@ fun GameBorder(
 
                     )
             }
+
+            // Maze
+            val path = Path()
+
+            path.apply {
+                // border
+                lineTo(size.width, 0f)
+                lineTo(size.width, size.height)
+                lineTo(0f, size.height)
+                lineTo(0f, 0f)
+
+                // second border
+                moveTo(50f, 50f)
+                lineTo(size.width - 50f , 50f)
+                lineTo(size.width -50f, size.height -50f)
+                lineTo(50f, size.height -50f)
+                lineTo(50f, 50f)
+
+                // enemy box
+                moveTo(size.width /2 + 90f, size.height /2 + 90f)
+                lineTo(size.width/ 2 + 90f, size.height /2 + 180f)
+                lineTo(size.width/ 2 - 120f, size.height /2 + 180f)
+                lineTo(size.width/ 2 - 120f, size.height /2 + 90f )
+
+            }
+            drawPath(
+                path = path,
+                color = PacmanMazeColor,
+                style = Stroke(
+                    width = 6.dp.toPx(),
+                )
+            )
 
 
         }

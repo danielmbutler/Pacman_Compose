@@ -20,10 +20,10 @@ class GameViewModel : ViewModel() {
 
     /* handles the direction the character is facing
          start angle
-         left = 25f
-         right = 200f
-         bottom = 100f
-         top = 280f
+         when going left = 25f
+         when going right = 200f
+         when going down = 100f
+         when going up = 280f
           */
     private var _characterStartAngle = MutableLiveData<Float>(25f)
     val characterStartAngle: LiveData<Float>
@@ -36,7 +36,7 @@ class GameViewModel : ViewModel() {
         viewModelScope.launch {
             while (rightPress) {
                 delay(500)
-                if (characterXOffset.value > 340f) characterXOffset.value = -500f
+                if (characterXOffset.value > 290f) characterXOffset.value = -500f
                 characterXOffset.value += incrementValue
                 Log.d(TAG, "rightpress: ${characterXOffset.value}")
 
@@ -50,7 +50,7 @@ class GameViewModel : ViewModel() {
         viewModelScope.launch {
             while (leftPress) {
                 delay(500)
-                if (characterXOffset.value < -400f) characterXOffset.value = +430f
+                if (characterXOffset.value < -350f) characterXOffset.value = +390f
                 characterXOffset.value -= incrementValue
                 Log.d(TAG, "leftPress: ${characterXOffset.value}")
 
@@ -77,8 +77,8 @@ class GameViewModel : ViewModel() {
         viewModelScope.launch {
             while (downPress) {
                 delay(500)
-                if (characterYOffset.value > 500f) characterYOffset.value += 0f else characterYOffset.value += incrementValue
-                Log.d(TAG, "leftPress: ${characterYOffset.value}")
+                if (characterYOffset.value > 450f) characterYOffset.value += 0f else characterYOffset.value += incrementValue
+                Log.d(TAG, "downPress: ${characterYOffset.value}")
 
             }
         }
