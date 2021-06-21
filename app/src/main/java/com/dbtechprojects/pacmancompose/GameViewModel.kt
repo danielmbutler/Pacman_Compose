@@ -11,7 +11,7 @@ import kotlinx.coroutines.*
 
 class GameViewModel : ViewModel() {
 
-    private val TAG = "GameViewModel"
+    private val logTag = "GameViewModel"
     private var leftPress: Boolean = false
     private var rightPress: Boolean = false
     private var downPress: Boolean = false
@@ -25,9 +25,10 @@ class GameViewModel : ViewModel() {
          when going down = 100f
          when going up = 280f
           */
-    private var _characterStartAngle = MutableLiveData<Float>(25f)
+    private var _characterStartAngle = MutableLiveData(25f)
     val characterStartAngle: LiveData<Float>
         get() = _characterStartAngle
+
 
     // handle presses
     fun rightPress(characterXOffset: MutableState<Float>) {
@@ -36,9 +37,9 @@ class GameViewModel : ViewModel() {
         viewModelScope.launch {
             while (rightPress) {
                 delay(500)
-                if (characterXOffset.value > 290f) characterXOffset.value = -500f
+                if (characterXOffset.value > 315f) characterXOffset.value = -400f
                 characterXOffset.value += incrementValue
-                Log.d(TAG, "rightpress: ${characterXOffset.value}")
+                Log.d(logTag, "rightpress: ${characterXOffset.value}")
 
             }
         }
@@ -50,9 +51,9 @@ class GameViewModel : ViewModel() {
         viewModelScope.launch {
             while (leftPress) {
                 delay(500)
-                if (characterXOffset.value < -350f) characterXOffset.value = +390f
+                if (characterXOffset.value <= -290f) characterXOffset.value = +450f
                 characterXOffset.value -= incrementValue
-                Log.d(TAG, "leftPress: ${characterXOffset.value}")
+                Log.d(logTag, "leftPress: ${characterXOffset.value}")
 
             }
         }
@@ -64,9 +65,8 @@ class GameViewModel : ViewModel() {
         viewModelScope.launch {
             while (upPress) {
                 delay(500)
-                if (characterYOffset.value <= -600f) characterYOffset.value += 0f else characterYOffset.value -= incrementValue
-                Log.d(TAG, "UpPress: ${characterYOffset.value}")
-
+                if (characterYOffset.value <= -1000f) characterYOffset.value += 0f else characterYOffset.value -= incrementValue
+                Log.d(logTag, "UpPress: ${characterYOffset.value}")
             }
         }
     }
@@ -77,8 +77,8 @@ class GameViewModel : ViewModel() {
         viewModelScope.launch {
             while (downPress) {
                 delay(500)
-                if (characterYOffset.value > 450f) characterYOffset.value += 0f else characterYOffset.value += incrementValue
-                Log.d(TAG, "downPress: ${characterYOffset.value}")
+                if (characterYOffset.value >= 0f) characterYOffset.value += 0f else characterYOffset.value += incrementValue
+                Log.d(logTag, "downPress: ${characterYOffset.value}")
 
             }
         }

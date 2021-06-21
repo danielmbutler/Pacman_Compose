@@ -36,7 +36,8 @@ import kotlinx.coroutines.*
 
 class MainActivity : ComponentActivity() {
 
-     val gameViewModel: GameViewModel by viewModels()
+    private val gameViewModel: GameViewModel by viewModels()
+
     @InternalCoroutinesApi
     @ExperimentalFoundationApi
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,9 +47,11 @@ class MainActivity : ComponentActivity() {
             PacmanComposeTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    val gameStarted = remember {mutableStateOf(false)}
-                    val characterYOffset = remember { mutableStateOf(0f)}
-                    val characterXOffset = remember { mutableStateOf(0f)}
+                    val gameStarted = remember { mutableStateOf(false) }
+                    val characterYOffset = remember { mutableStateOf(0f) }
+                    val characterXOffset = remember { mutableStateOf(0f) }
+                    val enemyYCollisionDetected = remember { mutableStateOf(false) }
+                    val enemyXCollisionDetected = remember { mutableStateOf(false) }
                     val pacFoodState = remember { PacFood() }
                     Column(
                         modifier = Modifier
@@ -70,8 +73,10 @@ class MainActivity : ComponentActivity() {
                             characterXOffset = characterXOffset,
                             characterYOffset = characterYOffset,
                             gameViewModel = gameViewModel,
-                            pacFoodState,
-                            resources
+                            pacFoodState = pacFoodState,
+                            resources = resources,
+                            enemyXOffset = enemyXCollisionDetected,
+                            enemyYOffset = enemyYCollisionDetected
                         )
                         Controls(
                             gameStarted,
@@ -81,39 +86,52 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    collisionDetectionMonitor(gameStarted, characterXOffset, characterYOffset, pacFoodState)
+                    gameLoop(
+                        gameStarted = gameStarted,
+                        characterXOffset = characterXOffset,
+                        characterYOffset = characterYOffset,
+                        pacFoodState = pacFoodState,
+                        enemyYOffset = enemyYCollisionDetected,
+                        enemyXOffset = enemyXCollisionDetected
+                    )
                 }
             }
         }
     }
 
-    private fun collisionDetectionMonitor(
+    private fun gameLoop(
         gameStarted: MutableState<Boolean>,
         characterXOffset: MutableState<Float>,
         characterYOffset: MutableState<Float>,
+        enemyYOffset: MutableState<Boolean>,
+        enemyXOffset: MutableState<Boolean>,
         pacFoodState: PacFood
-    ){
-        if (gameStarted.value)
-        {
+    ) {
+        if (gameStarted.value) {
             // Collision Check
-            val characterX = 958.0f / 2 + characterXOffset.value
-            val characterY = 1290.0f / 2 + characterYOffset.value
-            pacFoodState.foodList.forEach { foodModel  ->
-                Log.d("pacfood", "foodModel y: ${foodModel.yPos.toFloat()}, " +
-                        "characterOffset y: ${1290.0f / 2 + characterYOffset.value}, " +
-                        "foodModel x: ${foodModel.xPos.toFloat()}" +
-                        "characterOffset x: ${ 958.0f / 2 + characterXOffset.value}")
+            val characterX = 958.0f / 2 - 90f + characterXOffset.value
+            val characterY = 1290.0f - 155f + characterYOffset.value
+            pacFoodState.foodList.forEach { foodModel ->
+                Log.d(
+                    "pacfood", "foodModel y: ${foodModel.yPos.toFloat()}, " +
+                            "characterOffset y: ${1290.0f / 2 + characterYOffset.value}, " +
+                            "foodModel x: ${foodModel.xPos.toFloat()}" +
+                            "characterOffset x: ${958.0f / 2 + characterXOffset.value}"
+                )
                 if (
                     Range.create(characterX, characterX + 100).contains(foodModel.xPos.toFloat()) &&
                     Range.create(characterY, characterY + 100).contains(foodModel.yPos.toFloat())
-                )
-                {
+                ) {
                     // redraw outside box with 0 size and increment score by 1
                     foodModel.xPos = 1000
                     foodModel.yPos = 2000
                     Log.d("pacfood", "onCreate: collision ")
+                    Log.d("pacfood", "onCreate: collision ")
                 }
             }
+
+            // enemy detection
+
         }
     }
 }
@@ -123,24 +141,28 @@ fun GameBorder(
     gameStarted: MutableState<Boolean>,
     characterXOffset: MutableState<Float>,
     characterYOffset: MutableState<Float>,
+    enemyXOffset: MutableState<Boolean>,
+    enemyYOffset: MutableState<Boolean>,
     gameViewModel: GameViewModel,
     pacFoodState: PacFood,
     resources: Resources
 ) {
     val characterStartAngle by gameViewModel.characterStartAngle.observeAsState()
+
     Box(
         modifier = Modifier
             .border(6.dp, color = PacmanRed)
             .padding(6.dp)
     ) {
         val radius = 50f
-        val animateFloat = remember { androidx.compose.animation.core.Animatable(0f) }
-        LaunchedEffect(animateFloat) {
-            animateFloat.animateTo(
+        val animateCharacterSweepAngle = remember { Animatable(0f) }
+        LaunchedEffect(animateCharacterSweepAngle) {
+            animateCharacterSweepAngle.animateTo(
                 targetValue = 1f,
                 animationSpec = tween(durationMillis = 3000, easing = LinearEasing),
             )
         }
+
         val infiniteTransition = rememberInfiniteTransition()
         val mouthAnimation by infiniteTransition.animateFloat(
             initialValue = 360F,
@@ -149,6 +171,32 @@ fun GameBorder(
                 animation = tween(500, easing = LinearEasing),
                 repeatMode = RepeatMode.Restart
             )
+        )
+
+        val enemyMovementXAxis by animateFloatAsState(
+            targetValue = if (gameStarted.value) {
+                958.0f / 2 - 90f + characterXOffset.value
+            } else {
+                958.0f / 2 - 90f
+            },
+            animationSpec = tween(3000, easing = LinearEasing),
+            finishedListener = {
+                enemyXOffset.value = true
+            }
+
+        )
+
+        val enemyMovementYAxis by animateFloatAsState(
+            targetValue = if (gameStarted.value) {
+                1290.0f - 155f + characterYOffset.value
+            } else {
+                1290.0f / 2 + 60f
+            },
+            animationSpec = tween(3000, easing = LinearEasing),
+            finishedListener = {
+                enemyYOffset.value = true
+            }
+
         )
 
 
@@ -165,9 +213,12 @@ fun GameBorder(
             drawArc(
                 color = Color.Yellow,
                 startAngle = characterStartAngle ?: 30f,
-                sweepAngle = if (gameStarted.value) mouthAnimation else 360f * animateFloat.value,
+                sweepAngle = if (gameStarted.value) mouthAnimation else 360f * animateCharacterSweepAngle.value,
                 useCenter = true,
-                topLeft = Offset(size.width / 2 + characterXOffset.value, size.height / 2 + characterYOffset.value),
+                topLeft = Offset(
+                    size.width / 2 - 90f + characterXOffset.value,
+                    size.height - 155f + characterYOffset.value
+                ),
                 size = Size(
                     radius * 2,
                     radius * 2
@@ -179,17 +230,21 @@ fun GameBorder(
             // Enemy
             drawImage(
                 image = ImageBitmap.imageResource(res = resources, R.drawable.ghost_red),
-                topLeft = Offset(size.width / 2 -90f , size.height / 2 + 60f )
+                topLeft = Offset(
+                    enemyMovementXAxis,
+                    enemyMovementYAxis
+                )
             )
 
+
             // food
-            for(i in pacFoodState.foodList){
+            for (i in pacFoodState.foodList) {
                 drawArc(
                     color = Color.Yellow,
                     startAngle = characterStartAngle ?: 30f,
-                    sweepAngle =  360f,
+                    sweepAngle = 360f,
                     useCenter = true,
-                    topLeft = Offset( i.xPos.toFloat(), i.yPos.toFloat()),
+                    topLeft = Offset(i.xPos.toFloat(), i.yPos.toFloat()),
                     size = Size(
                         radius * i.size,
                         radius * i.size
@@ -211,16 +266,16 @@ fun GameBorder(
 
                 // second border
                 moveTo(50f, 50f)
-                lineTo(size.width - 50f , 50f)
-                lineTo(size.width -50f, size.height -50f)
-                lineTo(50f, size.height -50f)
+                lineTo(size.width - 50f, 50f)
+                lineTo(size.width - 50f, size.height - 50f)
+                lineTo(50f, size.height - 50f)
                 lineTo(50f, 50f)
 
                 // enemy box
-                moveTo(size.width /2 + 90f, size.height /2 + 90f)
-                lineTo(size.width/ 2 + 90f, size.height /2 + 180f)
-                lineTo(size.width/ 2 - 120f, size.height /2 + 180f)
-                lineTo(size.width/ 2 - 120f, size.height /2 + 90f )
+                moveTo(size.width / 2 + 90f, size.height / 2 + 90f)
+                lineTo(size.width / 2 + 90f, size.height / 2 + 180f)
+                lineTo(size.width / 2 - 120f, size.height / 2 + 180f)
+                lineTo(size.width / 2 - 120f, size.height / 2 + 90f)
 
             }
             drawPath(

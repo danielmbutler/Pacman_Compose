@@ -18,8 +18,8 @@ data class PacFood(
 
         for (i in 0 until foodCount) {
             val food = PacFoodModel(
-                xPos = Random.nextInt(55, 850), // should not be hard coded
-                yPos = Random.nextInt(55, 1200),
+                xPos = Random.nextInt(85, 850), // should not be hard coded
+                yPos = Random.nextInt(85, 1200),
                 size = 0.5f
             )
             Log.w("food", "${food.xPos}")
@@ -33,6 +33,4 @@ data class PacFoodModel(
     var xPos: Int,
     var yPos: Int,
     var size: Float
-) {
-
-}
+)
