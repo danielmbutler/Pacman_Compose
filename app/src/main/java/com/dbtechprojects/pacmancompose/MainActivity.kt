@@ -30,8 +30,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.dbtechprojects.pacmancompose.models.GameStatsModel
 import com.dbtechprojects.pacmancompose.models.PacFood
 import com.dbtechprojects.pacmancompose.ui.theme.*
+import com.dbtechprojects.pacmancompose.utils.GameHelpers
 import kotlinx.coroutines.*
 
 class MainActivity : ComponentActivity() {
@@ -50,8 +52,6 @@ class MainActivity : ComponentActivity() {
                     val gameStarted = remember { mutableStateOf(false) }
                     val characterYOffset = remember { mutableStateOf(0f) }
                     val characterXOffset = remember { mutableStateOf(0f) }
-                    val enemyYCollisionDetected = remember { mutableStateOf(false) }
-                    val enemyXCollisionDetected = remember { mutableStateOf(false) }
                     val pacFoodState = remember { PacFood() }
                     Column(
                         modifier = Modifier
@@ -75,8 +75,6 @@ class MainActivity : ComponentActivity() {
                             gameViewModel = gameViewModel,
                             pacFoodState = pacFoodState,
                             resources = resources,
-                            enemyXOffset = enemyXCollisionDetected,
-                            enemyYOffset = enemyYCollisionDetected
                         )
                         Controls(
                             gameStarted,
@@ -91,8 +89,6 @@ class MainActivity : ComponentActivity() {
                         characterXOffset = characterXOffset,
                         characterYOffset = characterYOffset,
                         pacFoodState = pacFoodState,
-                        enemyYOffset = enemyYCollisionDetected,
-                        enemyXOffset = enemyXCollisionDetected
                     )
                 }
             }
@@ -103,8 +99,6 @@ class MainActivity : ComponentActivity() {
         gameStarted: MutableState<Boolean>,
         characterXOffset: MutableState<Float>,
         characterYOffset: MutableState<Float>,
-        enemyYOffset: MutableState<Boolean>,
-        enemyXOffset: MutableState<Boolean>,
         pacFoodState: PacFood
     ) {
         if (gameStarted.value) {
@@ -141,8 +135,6 @@ fun GameBorder(
     gameStarted: MutableState<Boolean>,
     characterXOffset: MutableState<Float>,
     characterYOffset: MutableState<Float>,
-    enemyXOffset: MutableState<Boolean>,
-    enemyYOffset: MutableState<Boolean>,
     gameViewModel: GameViewModel,
     pacFoodState: PacFood,
     resources: Resources
@@ -154,7 +146,10 @@ fun GameBorder(
             .border(6.dp, color = PacmanRed)
             .padding(6.dp)
     ) {
+        // used for character and food to draw circle
         val radius = 50f
+
+        // animate drawing the pac character at the start of the game
         val animateCharacterSweepAngle = remember { Animatable(0f) }
         LaunchedEffect(animateCharacterSweepAngle) {
             animateCharacterSweepAngle.animateTo(
@@ -163,6 +158,8 @@ fun GameBorder(
             )
         }
 
+
+        // animate continued opening and closing of mouth whilst game is running
         val infiniteTransition = rememberInfiniteTransition()
         val mouthAnimation by infiniteTransition.animateFloat(
             initialValue = 360F,
@@ -173,33 +170,15 @@ fun GameBorder(
             )
         )
 
-        val enemyMovementXAxis by animateFloatAsState(
-            targetValue = if (gameStarted.value) {
-                958.0f / 2 - 90f + characterXOffset.value
-            } else {
-                958.0f / 2 - 90f
-            },
-            animationSpec = tween(3000, easing = LinearEasing),
-            finishedListener = {
-                enemyXOffset.value = true
-            }
+        // define enemy values (more to be added)
 
-        )
-
-        val enemyMovementYAxis by animateFloatAsState(
-            targetValue = if (gameStarted.value) {
-                1290.0f - 155f + characterYOffset.value
-            } else {
-                1290.0f / 2 + 60f
-            },
-            animationSpec = tween(3000, easing = LinearEasing),
-            finishedListener = {
-                enemyYOffset.value = true
-            }
-
+        val redEnemyMovement = GameHelpers.enemyMovement(
+            duration = 3000,
+            gamestats = GameStatsModel(characterXOffset, characterYOffset, gameStarted)
         )
 
 
+        // canvas to draw game
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
@@ -227,16 +206,6 @@ fun GameBorder(
 
                 )
 
-            // Enemy
-            drawImage(
-                image = ImageBitmap.imageResource(res = resources, R.drawable.ghost_red),
-                topLeft = Offset(
-                    enemyMovementXAxis,
-                    enemyMovementYAxis
-                )
-            )
-
-
             // food
             for (i in pacFoodState.foodList) {
                 drawArc(
@@ -253,6 +222,13 @@ fun GameBorder(
 
                     )
             }
+
+            // Enemy
+            drawImage(
+                image = ImageBitmap.imageResource(res = resources, R.drawable.ghost_red),
+                topLeft = redEnemyMovement
+
+            )
 
             // Maze
             val path = Path()
@@ -276,6 +252,24 @@ fun GameBorder(
                 lineTo(size.width / 2 + 90f, size.height / 2 + 180f)
                 lineTo(size.width / 2 - 120f, size.height / 2 + 180f)
                 lineTo(size.width / 2 - 120f, size.height / 2 + 90f)
+                /*
+                     barriers
+                  __________
+                 |___    ___|
+                     |__|
+                 */
+                //left  top corner barrier
+                moveTo(size.width /4 + 60f, size.height/4)
+                lineTo(size.width /4 -20f, size.height / 4 ) // bottom
+                lineTo(size.width /4 -20f, size.height / 4 -60f ) // left
+                lineTo(size.width /4 -90f, size.height / 4 -60f ) // left angle
+                lineTo(size.width /4 -90f, size.height / 4 -120f ) // left upward line to top
+                lineTo(size.width /4 + 120f , size.height / 4 -120f ) // top line
+                lineTo(size.width /4 + 120f , size.height / 4 -60f ) // line down to right
+                lineTo(size.width /4 + 60f  , size.height / 4 -60f ) // line right to center
+                lineTo(size.width /4 + 60f, size.height/4) // bottom line
+
+
 
             }
             drawPath(
