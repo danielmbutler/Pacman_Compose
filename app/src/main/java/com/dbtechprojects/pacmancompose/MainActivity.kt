@@ -174,7 +174,14 @@ fun GameBorder(
 
         val redEnemyMovement = GameHelpers.enemyMovement(
             duration = 3000,
-            gamestats = GameStatsModel(characterXOffset, characterYOffset, gameStarted)
+            gamestats = GameStatsModel(characterXOffset, characterYOffset, gameStarted),
+            initialXOffset = 90f
+        )
+
+        val orangeEnemyMovement = GameHelpers.enemyMovement(
+            duration = 2500,
+            gamestats = GameStatsModel(characterXOffset, characterYOffset, gameStarted),
+            initialXOffset = 70f
         )
 
 
@@ -229,11 +236,19 @@ fun GameBorder(
                 topLeft = redEnemyMovement
 
             )
+            drawImage(
+                image = ImageBitmap.imageResource(res = resources, R.drawable.ghost_orange),
+                topLeft = orangeEnemyMovement
+
+            )
 
             // Maze
-            val path = Path()
+            val borderPath = Path()
 
-            path.apply {
+            // barriers
+            val barrierPath = Path()
+
+            borderPath.apply {
                 // border
                 lineTo(size.width, 0f)
                 lineTo(size.width, size.height)
@@ -252,6 +267,11 @@ fun GameBorder(
                 lineTo(size.width / 2 + 90f, size.height / 2 + 180f)
                 lineTo(size.width / 2 - 120f, size.height / 2 + 180f)
                 lineTo(size.width / 2 - 120f, size.height / 2 + 90f)
+
+
+            }
+
+            barrierPath.apply {
                 /*
                      barriers
                   __________
@@ -266,18 +286,56 @@ fun GameBorder(
                 lineTo(size.width /4 -90f, size.height / 4 -120f ) // left upward line to top
                 lineTo(size.width /4 + 120f , size.height / 4 -120f ) // top line
                 lineTo(size.width /4 + 120f , size.height / 4 -60f ) // line down to right
-                lineTo(size.width /4 + 60f  , size.height / 4 -60f ) // line right to center
-                lineTo(size.width /4 + 60f, size.height/4) // bottom line
+                lineTo(size.width /4 + 50f  , size.height / 4 -60f ) // line right to center
+                lineTo(size.width /4 + 50f, size.height/4) // bottom line
 
+                // right  top corner barrier
+                moveTo(size.width /1.5f + 60f, size.height/4)
+                lineTo(size.width /1.5f -20f, size.height / 4 ) // bottom
+                lineTo(size.width /1.5f -20f, size.height / 4 -60f ) // left
+                lineTo(size.width /1.5f -90f, size.height / 4 -60f ) // left angle
+                lineTo(size.width /1.5f -90f, size.height / 4 -120f ) // left upward line to top
+                lineTo(size.width /1.5f + 120f , size.height / 4 -120f ) // top line
+                lineTo(size.width /1.5f + 120f , size.height / 4 -60f ) // line down to right
+                lineTo(size.width /1.5f + 50f  , size.height / 4 -60f ) // line right to center
+                lineTo(size.width /1.5f + 50f, size.height/4) // bottom line
 
+                // right bottom corner barrier
+                moveTo(size.width /1.5f + 60f, size.height/1.15f)
+                lineTo(size.width /1.5f -20f, size.height /1.15f ) // bottom
+                lineTo(size.width /1.5f -20f, size.height /1.15f -60f ) // left
+                lineTo(size.width /1.5f -90f, size.height /1.15f -60f ) // left angle
+                lineTo(size.width /1.5f -90f, size.height /1.15f -120f ) // left upward line to top
+                lineTo(size.width /1.5f + 120f , size.height /1.15f -120f ) // top line
+                lineTo(size.width /1.5f + 120f , size.height / 1.15f -60f ) // line down to right
+                lineTo(size.width /1.5f + 50f  , size.height / 1.15f -60f ) // line right to center
+                lineTo(size.width /1.5f + 50f, size.height/1.15f) // bottom line
+
+                //left  bottom corner barrier
+                moveTo(size.width /4 + 60f, size.height/1.15f)
+                lineTo(size.width /4 -20f, size.height / 1.15f ) // bottom
+                lineTo(size.width /4 -20f, size.height / 1.15f -60f ) // left
+                lineTo(size.width /4 -90f, size.height / 1.15f -60f ) // left angle
+                lineTo(size.width /4 -90f, size.height / 1.15f -120f ) // left upward line to top
+                lineTo(size.width /4 + 120f , size.height / 1.15f -120f ) // top line
+                lineTo(size.width /4 + 120f , size.height / 1.15f -60f ) // line down to right
+                lineTo(size.width /4 + 50f  , size.height / 1.15f -60f ) // line right to center
+                lineTo(size.width /4 + 50f, size.height/1.15f) // bottom line
 
             }
             drawPath(
-                path = path,
+                path = borderPath,
                 color = PacmanMazeColor,
                 style = Stroke(
                     width = 6.dp.toPx(),
-                )
+                ),
+
+            )
+
+            drawPath(
+                path = barrierPath,
+                color = PacmanMazeColor,
+                style = Fill,
             )
 
 

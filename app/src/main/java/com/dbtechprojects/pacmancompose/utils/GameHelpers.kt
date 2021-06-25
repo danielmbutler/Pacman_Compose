@@ -12,13 +12,13 @@ object GameHelpers {
 
 
     @Composable
-    fun enemyMovement(duration: Int, gamestats: GameStatsModel): Offset {
+    fun enemyMovement(duration: Int, gamestats: GameStatsModel , initialXOffset: Float): Offset {
         // X Axis
         val enemyMovementXAxis by animateFloatAsState(
             targetValue = if (gamestats.isGameStarted.value) {
                 958.0f / 2 - 90f + gamestats.CharacterXOffset.value
             } else {
-                958.0f / 2 - 90f
+                958.0f / 2 - initialXOffset // create spacing between enemies in box
             },
             animationSpec = tween(duration, easing = LinearEasing),
             finishedListener = {
