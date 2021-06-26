@@ -188,7 +188,7 @@ fun GameBorder(
 ) {
     val characterStartAngle by gameViewModel.characterStartAngle.observeAsState()
 
-    FullScreenDialog(showDialog = gameOverDialogState)
+    FullScreenDialog(showDialog = gameOverDialogState, "GAME OVER !")
 
     Box(
         modifier = Modifier

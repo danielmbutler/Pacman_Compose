@@ -24,7 +24,7 @@ import com.dbtechprojects.pacmancompose.ui.theme.PacmanPink
 import com.dbtechprojects.pacmancompose.ui.theme.PacmanYellow
 
 @Composable
-fun FullScreenDialog(showDialog: MutableState<Boolean>) {
+fun FullScreenDialog(showDialog: MutableState<Boolean> , text: String) {
     if (showDialog.value) {
         Dialog(
             properties =
@@ -54,7 +54,7 @@ fun FullScreenDialog(showDialog: MutableState<Boolean>) {
                         ) {
 
                             Text(
-                                text = "GAME OVER !",
+                                text = text,
                                 color = PacmanPink,
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
