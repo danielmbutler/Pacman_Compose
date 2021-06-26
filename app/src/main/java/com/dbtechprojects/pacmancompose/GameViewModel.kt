@@ -37,6 +37,7 @@ class GameViewModel : ViewModel() {
         viewModelScope.launch {
             while (rightPress) {
                 delay(500)
+                // move character to opposite wall
                 if (characterXOffset.value > 315f) characterXOffset.value = -400f
                 characterXOffset.value += incrementValue
                 Log.d(logTag, "rightpress: ${characterXOffset.value}")
@@ -51,6 +52,7 @@ class GameViewModel : ViewModel() {
         viewModelScope.launch {
             while (leftPress) {
                 delay(500)
+                // move character to opposite wall
                 if (characterXOffset.value <= -290f) characterXOffset.value = +450f
                 characterXOffset.value -= incrementValue
                 Log.d(logTag, "leftPress: ${characterXOffset.value}")
@@ -65,6 +67,7 @@ class GameViewModel : ViewModel() {
         viewModelScope.launch {
             while (upPress) {
                 delay(500)
+                // keep inside border
                 if (characterYOffset.value <= -1000f) characterYOffset.value += 0f else characterYOffset.value -= incrementValue
                 Log.d(logTag, "UpPress: ${characterYOffset.value}")
             }
@@ -77,6 +80,7 @@ class GameViewModel : ViewModel() {
         viewModelScope.launch {
             while (downPress) {
                 delay(500)
+                // keep inside border
                 if (characterYOffset.value >= 0f) characterYOffset.value += 0f else characterYOffset.value += incrementValue
                 Log.d(logTag, "downPress: ${characterYOffset.value}")
 

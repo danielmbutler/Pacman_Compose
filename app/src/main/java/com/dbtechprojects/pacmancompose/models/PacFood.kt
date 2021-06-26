@@ -27,7 +27,13 @@ data class PacFood(
 
         }
     }
+
+    fun initRedraw(){
+        initPacFoodList()
+    }
 }
+
+
 
 data class PacFoodModel(
     var xPos: Int,

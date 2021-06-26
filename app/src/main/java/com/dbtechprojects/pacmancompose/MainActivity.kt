@@ -4,7 +4,6 @@ import android.content.res.Resources
 import android.os.Bundle
 import android.util.Log
 import android.util.Range
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -16,7 +15,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.dbtechprojects.pacmancompose.models.DialogState
 import com.dbtechprojects.pacmancompose.models.EnemyMovementModel
 import com.dbtechprojects.pacmancompose.models.GameStatsModel
 import com.dbtechprojects.pacmancompose.models.PacFood
@@ -43,6 +42,13 @@ import kotlinx.coroutines.*
 class MainActivity : ComponentActivity() {
 
     private val gameViewModel: GameViewModel by viewModels()
+    private lateinit var gameStarted: MutableState<Boolean>
+    private lateinit var characterYOffset: MutableState<Float>
+    private lateinit var characterXOffset: MutableState<Float>
+    private lateinit var enemyMovementModel: MutableState<EnemyMovementModel>
+    private lateinit var gameOverDialogState: DialogState
+    private lateinit var pacFoodState: PacFood
+    private lateinit var foodCounter: MutableState<Int>
 
     @InternalCoroutinesApi
     @ExperimentalFoundationApi
@@ -53,12 +59,18 @@ class MainActivity : ComponentActivity() {
             PacmanComposeTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    val gameStarted = remember { mutableStateOf(false) }
-                    val characterYOffset = remember { mutableStateOf(0f) }
-                    val characterXOffset = remember { mutableStateOf(0f) }
-                    val enemyMovementModel = remember { mutableStateOf(EnemyMovementModel())}
-                    val gameOverDialogState = remember { mutableStateOf(false) }
-                    val pacFoodState = remember { PacFood() }
+                     gameStarted = remember { mutableStateOf(false) }
+                     characterYOffset = remember { mutableStateOf(0f) }
+                     characterXOffset = remember { mutableStateOf(0f) }
+                     enemyMovementModel = remember { mutableStateOf(EnemyMovementModel()) }
+                     gameOverDialogState = remember {
+                        DialogState(
+                            shouldShow = mutableStateOf(false),
+                            mutableStateOf("")
+                        )
+                    }
+                    foodCounter = remember { mutableStateOf(100) }
+                    pacFoodState = remember { PacFood() }
                     Column(
                         modifier = Modifier
                             .background(color = PacmanBackground)
@@ -99,7 +111,7 @@ class MainActivity : ComponentActivity() {
                         characterYOffset = characterYOffset,
                         pacFoodState = pacFoodState,
                         enemyMovementModel = enemyMovementModel.value,
-                        gameOverDialogState = gameOverDialogState
+                        foodCounter = foodCounter
                     )
                 }
             }
@@ -110,10 +122,11 @@ class MainActivity : ComponentActivity() {
         gameStarted: MutableState<Boolean>,
         characterXOffset: MutableState<Float>,
         characterYOffset: MutableState<Float>,
+        foodCounter: MutableState<Int>,
         pacFoodState: PacFood,
         enemyMovementModel: EnemyMovementModel,
-        gameOverDialogState: MutableState<Boolean>
     ) {
+
         if (gameStarted.value) {
             // Collision Check
             val characterX = 958.0f / 2 - 90f + characterXOffset.value
@@ -132,47 +145,62 @@ class MainActivity : ComponentActivity() {
                     // redraw outside box with 0 size and increment score by 1
                     foodModel.xPos = 1000
                     foodModel.yPos = 2000
+                    foodCounter.value -= 1
                     Log.d("pacfood", "onCreate: collision ")
                     Log.d("pacfood", "onCreate: collision ")
                 }
             }
 
             // enemy collision detection
-            Log.d("enemyMovement", "" +
-                    "Orange : x: ${enemyMovementModel.orangeEnemyMovement.value.x} " +
-                    "y: ${enemyMovementModel.orangeEnemyMovement.value.y} Red: x:" +
-                    " ${enemyMovementModel.redEnemyMovement.value.x} y: " +
-                    "${enemyMovementModel.redEnemyMovement.value.y} character current position : x:" +
-                    " $characterX y : $characterY")
+            Log.d(
+                "enemyMovement", "" +
+                        "Orange : x: ${enemyMovementModel.orangeEnemyMovement.value.x} " +
+                        "y: ${enemyMovementModel.orangeEnemyMovement.value.y} Red: x:" +
+                        " ${enemyMovementModel.redEnemyMovement.value.x} y: " +
+                        "${enemyMovementModel.redEnemyMovement.value.y} character current position : x:" +
+                        " $characterX y : $characterY"
+            )
 
-                if (
-                    // if enemy is within 100f of character then a collision has occurred and the game should stop
-                    Range.create(characterX, characterX + 25).contains(
-                        enemyMovementModel.redEnemyMovement.value.x
-                    ) &&
-                    Range.create(characterY, characterY + 25).contains(
-                        enemyMovementModel.redEnemyMovement.value.y
-                    ) ||
-                    Range.create(characterX, characterX + 25).contains(
-                        enemyMovementModel.orangeEnemyMovement.value.x
-                    ) &&
-                    Range.create(characterY, characterY + 25).contains(
-                        enemyMovementModel.orangeEnemyMovement.value.y
-                    )
+            if (
+            // if enemy is within 100f of character then a collision has occurred and the game should stop
+                Range.create(characterX, characterX + 25).contains(
+                    enemyMovementModel.redEnemyMovement.value.x
+                ) &&
+                Range.create(characterY, characterY + 25).contains(
+                    enemyMovementModel.redEnemyMovement.value.y
+                ) ||
+                Range.create(characterX, characterX + 25).contains(
+                    enemyMovementModel.orangeEnemyMovement.value.x
+                ) &&
+                Range.create(characterY, characterY + 25).contains(
+                    enemyMovementModel.orangeEnemyMovement.value.y
+                )
 
-                ){
-                    // gameover, stop game and show dialog
-                    gameStarted.value = false
-                    gameOverDialogState.value = true
-                    Log.d("enemyMovement","GAME OVER")
+            ) {
+                // gameover, stop game and show dialog
+                resetGame("GAME OVER")
 
+            }
 
-                }
-
+            // win logic
+            Log.d("food counter", "counter: ${foodCounter.value} ")
+            if (foodCounter.value == 0) {
+                resetGame("YOU WON !")
+            }
 
 
         }
     }
+
+    private fun resetGame(message: String) {
+        gameStarted.value = false
+        gameOverDialogState.shouldShow.value = true
+        gameOverDialogState.message.value = message
+        foodCounter.value = 100 // reset counter
+        pacFoodState.initRedraw()
+
+    }
+
 }
 
 @Composable
@@ -184,11 +212,11 @@ fun GameBorder(
     pacFoodState: PacFood,
     enemyMovementModel: EnemyMovementModel,
     resources: Resources,
-    gameOverDialogState: MutableState<Boolean>
+    gameOverDialogState: DialogState
 ) {
     val characterStartAngle by gameViewModel.characterStartAngle.observeAsState()
 
-    FullScreenDialog(showDialog = gameOverDialogState, "GAME OVER !")
+    FullScreenDialog(showDialog = gameOverDialogState.shouldShow, gameOverDialogState.message.value)
 
     Box(
         modifier = Modifier
@@ -330,48 +358,51 @@ fun GameBorder(
                      |__|
                  */
                 //left  top corner barrier
-                moveTo(size.width /4 + 60f, size.height/4)
-                lineTo(size.width /4 -20f, size.height / 4 ) // bottom
-                lineTo(size.width /4 -20f, size.height / 4 -60f ) // left
-                lineTo(size.width /4 -90f, size.height / 4 -60f ) // left angle
-                lineTo(size.width /4 -90f, size.height / 4 -120f ) // left upward line to top
-                lineTo(size.width /4 + 120f , size.height / 4 -120f ) // top line
-                lineTo(size.width /4 + 120f , size.height / 4 -60f ) // line down to right
-                lineTo(size.width /4 + 50f  , size.height / 4 -60f ) // line right to center
-                lineTo(size.width /4 + 50f, size.height/4) // bottom line
+                moveTo(size.width / 4 + 60f, size.height / 4)
+                lineTo(size.width / 4 - 20f, size.height / 4) // bottom
+                lineTo(size.width / 4 - 20f, size.height / 4 - 60f) // left
+                lineTo(size.width / 4 - 90f, size.height / 4 - 60f) // left angle
+                lineTo(size.width / 4 - 90f, size.height / 4 - 120f) // left upward line to top
+                lineTo(size.width / 4 + 120f, size.height / 4 - 120f) // top line
+                lineTo(size.width / 4 + 120f, size.height / 4 - 60f) // line down to right
+                lineTo(size.width / 4 + 50f, size.height / 4 - 60f) // line right to center
+                lineTo(size.width / 4 + 50f, size.height / 4) // bottom line
 
                 // right  top corner barrier
-                moveTo(size.width /1.5f + 60f, size.height/4)
-                lineTo(size.width /1.5f -20f, size.height / 4 ) // bottom
-                lineTo(size.width /1.5f -20f, size.height / 4 -60f ) // left
-                lineTo(size.width /1.5f -90f, size.height / 4 -60f ) // left angle
-                lineTo(size.width /1.5f -90f, size.height / 4 -120f ) // left upward line to top
-                lineTo(size.width /1.5f + 120f , size.height / 4 -120f ) // top line
-                lineTo(size.width /1.5f + 120f , size.height / 4 -60f ) // line down to right
-                lineTo(size.width /1.5f + 50f  , size.height / 4 -60f ) // line right to center
-                lineTo(size.width /1.5f + 50f, size.height/4) // bottom line
+                moveTo(size.width / 1.5f + 60f, size.height / 4)
+                lineTo(size.width / 1.5f - 20f, size.height / 4) // bottom
+                lineTo(size.width / 1.5f - 20f, size.height / 4 - 60f) // left
+                lineTo(size.width / 1.5f - 90f, size.height / 4 - 60f) // left angle
+                lineTo(size.width / 1.5f - 90f, size.height / 4 - 120f) // left upward line to top
+                lineTo(size.width / 1.5f + 120f, size.height / 4 - 120f) // top line
+                lineTo(size.width / 1.5f + 120f, size.height / 4 - 60f) // line down to right
+                lineTo(size.width / 1.5f + 50f, size.height / 4 - 60f) // line right to center
+                lineTo(size.width / 1.5f + 50f, size.height / 4) // bottom line
 
                 // right bottom corner barrier
-                moveTo(size.width /1.5f + 60f, size.height/1.15f)
-                lineTo(size.width /1.5f -20f, size.height /1.15f ) // bottom
-                lineTo(size.width /1.5f -20f, size.height /1.15f -60f ) // left
-                lineTo(size.width /1.5f -90f, size.height /1.15f -60f ) // left angle
-                lineTo(size.width /1.5f -90f, size.height /1.15f -120f ) // left upward line to top
-                lineTo(size.width /1.5f + 120f , size.height /1.15f -120f ) // top line
-                lineTo(size.width /1.5f + 120f , size.height / 1.15f -60f ) // line down to right
-                lineTo(size.width /1.5f + 50f  , size.height / 1.15f -60f ) // line right to center
-                lineTo(size.width /1.5f + 50f, size.height/1.15f) // bottom line
+                moveTo(size.width / 1.5f + 60f, size.height / 1.15f)
+                lineTo(size.width / 1.5f - 20f, size.height / 1.15f) // bottom
+                lineTo(size.width / 1.5f - 20f, size.height / 1.15f - 60f) // left
+                lineTo(size.width / 1.5f - 90f, size.height / 1.15f - 60f) // left angle
+                lineTo(
+                    size.width / 1.5f - 90f,
+                    size.height / 1.15f - 120f
+                ) // left upward line to top
+                lineTo(size.width / 1.5f + 120f, size.height / 1.15f - 120f) // top line
+                lineTo(size.width / 1.5f + 120f, size.height / 1.15f - 60f) // line down to right
+                lineTo(size.width / 1.5f + 50f, size.height / 1.15f - 60f) // line right to center
+                lineTo(size.width / 1.5f + 50f, size.height / 1.15f) // bottom line
 
                 //left  bottom corner barrier
-                moveTo(size.width /4 + 60f, size.height/1.15f)
-                lineTo(size.width /4 -20f, size.height / 1.15f ) // bottom
-                lineTo(size.width /4 -20f, size.height / 1.15f -60f ) // left
-                lineTo(size.width /4 -90f, size.height / 1.15f -60f ) // left angle
-                lineTo(size.width /4 -90f, size.height / 1.15f -120f ) // left upward line to top
-                lineTo(size.width /4 + 120f , size.height / 1.15f -120f ) // top line
-                lineTo(size.width /4 + 120f , size.height / 1.15f -60f ) // line down to right
-                lineTo(size.width /4 + 50f  , size.height / 1.15f -60f ) // line right to center
-                lineTo(size.width /4 + 50f, size.height/1.15f) // bottom line
+                moveTo(size.width / 4 + 60f, size.height / 1.15f)
+                lineTo(size.width / 4 - 20f, size.height / 1.15f) // bottom
+                lineTo(size.width / 4 - 20f, size.height / 1.15f - 60f) // left
+                lineTo(size.width / 4 - 90f, size.height / 1.15f - 60f) // left angle
+                lineTo(size.width / 4 - 90f, size.height / 1.15f - 120f) // left upward line to top
+                lineTo(size.width / 4 + 120f, size.height / 1.15f - 120f) // top line
+                lineTo(size.width / 4 + 120f, size.height / 1.15f - 60f) // line down to right
+                lineTo(size.width / 4 + 50f, size.height / 1.15f - 60f) // line right to center
+                lineTo(size.width / 4 + 50f, size.height / 1.15f) // bottom line
 
             }
             drawPath(
@@ -381,7 +412,7 @@ fun GameBorder(
                     width = 6.dp.toPx(),
                 ),
 
-            )
+                )
 
             drawPath(
                 path = barrierPath,

@@ -28,7 +28,6 @@ object GameHelpers {
         )
 
         // y Axis
-
         val enemyMovementYAxis by animateFloatAsState(
             targetValue = if (gamestats.isGameStarted.value) {
                 1290.0f - 155f + gamestats.CharacterYOffset.value
