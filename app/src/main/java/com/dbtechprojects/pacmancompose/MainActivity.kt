@@ -4,6 +4,7 @@ import android.content.res.Resources
 import android.os.Bundle
 import android.util.Log
 import android.util.Range
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -15,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,8 +32,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.dbtechprojects.pacmancompose.models.EnemyMovementModel
 import com.dbtechprojects.pacmancompose.models.GameStatsModel
 import com.dbtechprojects.pacmancompose.models.PacFood
+import com.dbtechprojects.pacmancompose.ui.FullScreenDialog
 import com.dbtechprojects.pacmancompose.ui.theme.*
 import com.dbtechprojects.pacmancompose.utils.GameHelpers
 import kotlinx.coroutines.*
@@ -52,6 +56,8 @@ class MainActivity : ComponentActivity() {
                     val gameStarted = remember { mutableStateOf(false) }
                     val characterYOffset = remember { mutableStateOf(0f) }
                     val characterXOffset = remember { mutableStateOf(0f) }
+                    val enemyMovementModel = remember { mutableStateOf(EnemyMovementModel())}
+                    val gameOverDialogState = remember { mutableStateOf(false) }
                     val pacFoodState = remember { PacFood() }
                     Column(
                         modifier = Modifier
@@ -75,6 +81,9 @@ class MainActivity : ComponentActivity() {
                             gameViewModel = gameViewModel,
                             pacFoodState = pacFoodState,
                             resources = resources,
+                            enemyMovementModel = enemyMovementModel.value,
+                            gameOverDialogState = gameOverDialogState
+
                         )
                         Controls(
                             gameStarted,
@@ -89,6 +98,8 @@ class MainActivity : ComponentActivity() {
                         characterXOffset = characterXOffset,
                         characterYOffset = characterYOffset,
                         pacFoodState = pacFoodState,
+                        enemyMovementModel = enemyMovementModel.value,
+                        gameOverDialogState = gameOverDialogState
                     )
                 }
             }
@@ -99,7 +110,9 @@ class MainActivity : ComponentActivity() {
         gameStarted: MutableState<Boolean>,
         characterXOffset: MutableState<Float>,
         characterYOffset: MutableState<Float>,
-        pacFoodState: PacFood
+        pacFoodState: PacFood,
+        enemyMovementModel: EnemyMovementModel,
+        gameOverDialogState: MutableState<Boolean>
     ) {
         if (gameStarted.value) {
             // Collision Check
@@ -124,7 +137,39 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            // enemy detection
+            // enemy collision detection
+            Log.d("enemyMovement", "" +
+                    "Orange : x: ${enemyMovementModel.orangeEnemyMovement.value.x} " +
+                    "y: ${enemyMovementModel.orangeEnemyMovement.value.y} Red: x:" +
+                    " ${enemyMovementModel.redEnemyMovement.value.x} y: " +
+                    "${enemyMovementModel.redEnemyMovement.value.y} character current position : x:" +
+                    " $characterX y : $characterY")
+
+                if (
+                    // if enemy is within 100f of character then a collision has occurred and the game should stop
+                    Range.create(characterX, characterX + 25).contains(
+                        enemyMovementModel.redEnemyMovement.value.x
+                    ) &&
+                    Range.create(characterY, characterY + 25).contains(
+                        enemyMovementModel.redEnemyMovement.value.y
+                    ) ||
+                    Range.create(characterX, characterX + 25).contains(
+                        enemyMovementModel.orangeEnemyMovement.value.x
+                    ) &&
+                    Range.create(characterY, characterY + 25).contains(
+                        enemyMovementModel.orangeEnemyMovement.value.y
+                    )
+
+                ){
+                    // gameover, stop game and show dialog
+                    gameStarted.value = false
+                    gameOverDialogState.value = true
+                    Log.d("enemyMovement","GAME OVER")
+
+
+                }
+
+
 
         }
     }
@@ -137,9 +182,13 @@ fun GameBorder(
     characterYOffset: MutableState<Float>,
     gameViewModel: GameViewModel,
     pacFoodState: PacFood,
-    resources: Resources
+    enemyMovementModel: EnemyMovementModel,
+    resources: Resources,
+    gameOverDialogState: MutableState<Boolean>
 ) {
     val characterStartAngle by gameViewModel.characterStartAngle.observeAsState()
+
+    FullScreenDialog(showDialog = gameOverDialogState)
 
     Box(
         modifier = Modifier
@@ -172,13 +221,15 @@ fun GameBorder(
 
         // define enemy values (more to be added)
 
-        val redEnemyMovement = GameHelpers.enemyMovement(
+        //Red Enemy
+        enemyMovementModel.redEnemyMovement.value = GameHelpers.enemyMovement(
             duration = 3000,
             gamestats = GameStatsModel(characterXOffset, characterYOffset, gameStarted),
             initialXOffset = 90f
         )
 
-        val orangeEnemyMovement = GameHelpers.enemyMovement(
+        // Orange Enemy
+        enemyMovementModel.orangeEnemyMovement.value = GameHelpers.enemyMovement(
             duration = 2500,
             gamestats = GameStatsModel(characterXOffset, characterYOffset, gameStarted),
             initialXOffset = 70f
@@ -233,12 +284,12 @@ fun GameBorder(
             // Enemy
             drawImage(
                 image = ImageBitmap.imageResource(res = resources, R.drawable.ghost_red),
-                topLeft = redEnemyMovement
+                topLeft = enemyMovementModel.redEnemyMovement.value
 
             )
             drawImage(
                 image = ImageBitmap.imageResource(res = resources, R.drawable.ghost_orange),
-                topLeft = orangeEnemyMovement
+                topLeft = enemyMovementModel.orangeEnemyMovement.value
 
             )
 
