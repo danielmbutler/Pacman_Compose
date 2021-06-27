@@ -1,6 +1,7 @@
 package com.dbtechprojects.pacmancompose
 
 import android.util.Log
+import android.util.Range
 import androidx.compose.runtime.MutableState
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -31,7 +32,7 @@ class GameViewModel : ViewModel() {
 
 
     // handle presses
-    fun rightPress(characterXOffset: MutableState<Float>) {
+    fun rightPress(characterXOffset: MutableState<Float>, characterYOffset: MutableState<Float>) {
         rightPress = true
         _characterStartAngle.postValue(25f)
         viewModelScope.launch {
@@ -39,14 +40,35 @@ class GameViewModel : ViewModel() {
                 delay(500)
                 // move character to opposite wall
                 if (characterXOffset.value > 315f) characterXOffset.value = -400f
-                characterXOffset.value += incrementValue
-                Log.d(logTag, "rightpress: ${characterXOffset.value}")
+
+                // implement barrier constraints
+
+                if (
+                //Top Right
+                    Range.create(-310f, -225f).contains(characterXOffset.value) &&
+                    Range.create(-975f, -900f).contains(characterYOffset.value) ||
+                // Top Left
+                    Range.create(75f, 150f).contains(characterXOffset.value) &&
+                    Range.create(-975f, -900f).contains(characterYOffset.value) ||
+                // EnemyBox
+                    Range.create(-150f, -75f).contains(characterXOffset.value) &&
+                    Range.create(-450f, -375f).contains(characterYOffset.value) ||
+                // Bottom Left
+                    Range.create(-310f, -225f).contains(characterXOffset.value) &&
+                    Range.create(-150f, -75f).contains(characterYOffset.value) ||
+                // Bottom Right
+                    Range.create(75f, 150f).contains(characterXOffset.value) &&
+                    Range.create(-150f, -75f).contains(characterYOffset.value)
+
+                        ) characterXOffset.value += 0f else characterXOffset.value += incrementValue
+
+                Log.d(logTag, "rightpress: x:  ${characterXOffset.value} y: ${characterYOffset.value}")
 
             }
         }
     }
 
-    fun leftPress(characterXOffset: MutableState<Float>) {
+    fun leftPress(characterXOffset: MutableState<Float>, characterYOffset: MutableState<Float>) {
         leftPress = true
         _characterStartAngle.postValue(200f)
         viewModelScope.launch {
@@ -54,8 +76,29 @@ class GameViewModel : ViewModel() {
                 delay(500)
                 // move character to opposite wall
                 if (characterXOffset.value <= -290f) characterXOffset.value = +450f
-                characterXOffset.value -= incrementValue
-                Log.d(logTag, "leftPress: ${characterXOffset.value}")
+
+                // implement barrier constraints
+
+                if (
+                //Top Right
+                     Range.create(350f, 425f).contains(characterXOffset.value) &&
+                     Range.create(-975f, -900f).contains(characterYOffset.value) ||
+//                // Top Left
+                    Range.create(-150f, -75f).contains(characterXOffset.value) &&
+                    Range.create(-975f, -900f).contains(characterYOffset.value) ||
+//                // EnemyBox
+                    Range.create(75f, 150f).contains(characterXOffset.value) &&
+                    Range.create(-450f, -375f).contains(characterYOffset.value) ||
+//                // Bottom Left
+                    Range.create(-150f, -75f).contains(characterXOffset.value) &&
+                    Range.create(-150f, -75f).contains(characterYOffset.value) ||
+//                // Bottom Right
+                    Range.create(225f, 300f).contains(characterXOffset.value) &&
+                    Range.create(-150f, -75f).contains(characterYOffset.value)
+
+               ) characterXOffset.value -= 0f else characterXOffset.value -= incrementValue
+
+                Log.d(logTag, "leftPress: X: ${characterXOffset.value} Y: ${characterYOffset.value}")
 
             }
         }
