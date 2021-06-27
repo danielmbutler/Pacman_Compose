@@ -71,13 +71,14 @@ class MainActivity : ComponentActivity() {
                     MainScreenContent()
                 }
             }
+
+            gameLoop(
+                gameStatsModel = gameStatsModel,
+                pacFoodState = pacFoodState,
+                enemyMovementModel = enemyMovementModel.value,
+                foodCounter = foodCounter
+            )
         }
-        gameLoop(
-            gameStatsModel = gameStatsModel,
-            pacFoodState = pacFoodState,
-            enemyMovementModel = enemyMovementModel.value,
-            foodCounter = foodCounter
-        )
     }
 
     @ExperimentalFoundationApi
