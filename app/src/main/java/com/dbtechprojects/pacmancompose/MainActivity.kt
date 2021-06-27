@@ -193,11 +193,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun resetGame(message: String) {
-//        gameStarted.value = false
-//        gameOverDialogState.shouldShow.value = true
-//        gameOverDialogState.message.value = message
-//        foodCounter.value = 100 // reset counter
-//        pacFoodState.initRedraw()
+        gameStarted.value = false
+        gameOverDialogState.shouldShow.value = true
+        gameOverDialogState.message.value = message
+        foodCounter.value = 100 // reset counter
+        pacFoodState.initRedraw()
 
     }
 
@@ -520,7 +520,7 @@ fun Controls(
                         detectTapGestures(
                             onPress = {
                                 if (gameStarted.value) {
-                                    gameViewModel.downPress(characterYOffset)
+                                    gameViewModel.downPress(characterYOffset, characterXOffset)
                                     tryAwaitRelease()
                                     gameViewModel.releaseDown()
                                 }

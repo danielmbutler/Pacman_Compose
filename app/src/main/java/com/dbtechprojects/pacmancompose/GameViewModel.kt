@@ -60,9 +60,12 @@ class GameViewModel : ViewModel() {
                     Range.create(75f, 150f).contains(characterXOffset.value) &&
                     Range.create(-150f, -75f).contains(characterYOffset.value)
 
-                        ) characterXOffset.value += 0f else characterXOffset.value += incrementValue
+                ) characterXOffset.value += 0f else characterXOffset.value += incrementValue
 
-                Log.d(logTag, "rightpress: x:  ${characterXOffset.value} y: ${characterYOffset.value}")
+                Log.d(
+                    logTag,
+                    "rightpress: x:  ${characterXOffset.value} y: ${characterYOffset.value}"
+                )
 
             }
         }
@@ -81,24 +84,27 @@ class GameViewModel : ViewModel() {
 
                 if (
                 //Top Right
-                     Range.create(350f, 425f).contains(characterXOffset.value) &&
-                     Range.create(-975f, -900f).contains(characterYOffset.value) ||
-                   // Top Left
-                     Range.create(-150f, -75f).contains(characterXOffset.value) &&
-                     Range.create(-975f, -900f).contains(characterYOffset.value) ||
-                   // EnemyBox
-                     Range.create(75f, 150f).contains(characterXOffset.value) &&
-                     Range.create(-450f, -375f).contains(characterYOffset.value) ||
-                   // Bottom Left
-                     Range.create(-150f, -75f).contains(characterXOffset.value) &&
-                     Range.create(-150f, -75f).contains(characterYOffset.value) ||
-                   // Bottom Right
+                    Range.create(350f, 425f).contains(characterXOffset.value) &&
+                    Range.create(-975f, -900f).contains(characterYOffset.value) ||
+                // Top Left
+                    Range.create(-150f, -75f).contains(characterXOffset.value) &&
+                    Range.create(-975f, -900f).contains(characterYOffset.value) ||
+                // EnemyBox
+                    Range.create(75f, 150f).contains(characterXOffset.value) &&
+                    Range.create(-450f, -375f).contains(characterYOffset.value) ||
+                // Bottom Left
+                    Range.create(-150f, -75f).contains(characterXOffset.value) &&
+                    Range.create(-150f, -75f).contains(characterYOffset.value) ||
+                // Bottom Right
                     Range.create(225f, 300f).contains(characterXOffset.value) &&
                     Range.create(-150f, -75f).contains(characterYOffset.value)
 
-               ) characterXOffset.value -= 0f else characterXOffset.value -= incrementValue
+                ) characterXOffset.value -= 0f else characterXOffset.value -= incrementValue
 
-                Log.d(logTag, "leftPress: X: ${characterXOffset.value} Y: ${characterYOffset.value}")
+                Log.d(
+                    logTag,
+                    "leftPress: X: ${characterXOffset.value} Y: ${characterYOffset.value}"
+                )
 
             }
         }
@@ -115,19 +121,19 @@ class GameViewModel : ViewModel() {
 
                 if (
                 // keep inside border
-                characterYOffset.value <= -1000f ||
+                    characterYOffset.value <= -1000f ||
                 //Top Right
                     Range.create(150f, 300f).contains(characterXOffset.value) &&
-                    Range.create(-975f, -900f).contains(characterYOffset.value)||
+                    Range.create(-975f, -900f).contains(characterYOffset.value) ||
                 // Top Left
-                Range.create(-225f, -75f).contains(characterXOffset.value) &&
-                Range.create(-975f, -900f).contains(characterYOffset.value) ||
+                    Range.create(-225f, -75f).contains(characterXOffset.value) &&
+                    Range.create(-975f, -900f).contains(characterYOffset.value) ||
                 // EnemyBox
-                Range.create(-75f, 150f).contains(characterXOffset.value) &&
-                Range.create(-375f, -300f).contains(characterYOffset.value) ||
+                    Range.create(-75f, 150f).contains(characterXOffset.value) &&
+                    Range.create(-375f, -300f).contains(characterYOffset.value) ||
                 // Bottom Left
-                Range.create(-225f, -0f).contains(characterXOffset.value) &&
-                Range.create(-150f, -75f).contains(characterYOffset.value)||
+                    Range.create(-225f, -0f).contains(characterXOffset.value) &&
+                    Range.create(-150f, -75f).contains(characterYOffset.value) ||
                 // Bottom Right
                     Range.create(150f, 300f).contains(characterXOffset.value) &&
                     Range.create(-150f, -75f).contains(characterYOffset.value)
@@ -139,15 +145,35 @@ class GameViewModel : ViewModel() {
         }
     }
 
-    fun downPress(characterYOffset: MutableState<Float>) {
+    fun downPress(characterYOffset: MutableState<Float>, characterXOffset: MutableState<Float>) {
         downPress = true
         _characterStartAngle.postValue(100f)
         viewModelScope.launch {
             while (downPress) {
                 delay(500)
+
+                if (
                 // keep inside border
-                if (characterYOffset.value >= 0f) characterYOffset.value += 0f else characterYOffset.value += incrementValue
-                Log.d(logTag, "downPress: ${characterYOffset.value}")
+                    characterYOffset.value >= 0f ||
+                //Top Right
+                    Range.create(125f, 300f).contains(characterXOffset.value) &&
+                    Range.create(-1050f, -825f).contains(characterYOffset.value) ||
+                // Top Left
+                    Range.create(-250f, -75f).contains(characterXOffset.value) &&
+                    Range.create(-1050f, -825f).contains(characterYOffset.value) ||
+                // EnemyBox
+                    Range.create(-75f, 150f).contains(characterXOffset.value) &&
+                    Range.create(-450f, -375f).contains(characterYOffset.value) ||
+                // Bottom Left
+                    Range.create(-225f, -0f).contains(characterXOffset.value) &&
+                    Range.create(-225f, -200f).contains(characterYOffset.value) ||
+                // Bottom Right
+                    Range.create(150f, 300f).contains(characterXOffset.value) &&
+                    Range.create(-225f, -200f).contains(characterYOffset.value)
+
+                ) characterYOffset.value += 0f else characterYOffset.value += incrementValue
+
+                Log.d(logTag, "downPress: y: ${characterYOffset.value}, x: ${characterXOffset.value}")
 
             }
         }
