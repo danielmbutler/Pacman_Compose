@@ -1,5 +1,5 @@
 # Pacman Compose
-This Pacman style game is entirely created using Jetpack Compose, Still currently a work-in progress.
+This Pacman style game is entirely created using Jetpack Compose, still currently a work-in progress.
 
 ## Demo
 
