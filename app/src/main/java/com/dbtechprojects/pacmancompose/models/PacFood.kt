@@ -1,6 +1,7 @@
 package com.dbtechprojects.pacmancompose.models
 
 import android.util.Log
+import com.dbtechprojects.pacmancompose.utils.GameConstants
 import kotlin.random.Random
 
 
@@ -14,11 +15,11 @@ data class PacFood(
     private fun initPacFoodList() {
         foodList.clear()
 
-        val foodCount = 100
 
-        for (i in 0 until foodCount) {
+
+        for (i in 0 until GameConstants.FOOD_COUNTER) {
             val food = PacFoodModel(
-                xPos = Random.nextInt(85, 850), // should not be hard coded
+                xPos = Random.nextInt(85, 850),
                 yPos = Random.nextInt(85, 1200),
                 size = 0.5f
             )

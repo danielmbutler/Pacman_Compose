@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dbtechprojects.pacmancompose.utils.GameConstants.incrementValue
 import kotlinx.coroutines.*
 
 
@@ -17,7 +18,7 @@ class GameViewModel : ViewModel() {
     private var rightPress: Boolean = false
     private var downPress: Boolean = false
     private var upPress: Boolean = false
-    private var incrementValue = 75f
+
 
     /* handles the direction the character is facing
          start angle
@@ -34,7 +35,7 @@ class GameViewModel : ViewModel() {
     // handle presses
     fun rightPress(characterXOffset: MutableState<Float>, characterYOffset: MutableState<Float>) {
         rightPress = true
-        _characterStartAngle.postValue(25f)
+        _characterStartAngle.postValue(25f) // change direction character is facing
         viewModelScope.launch {
             while (rightPress) {
                 delay(500)
@@ -73,7 +74,7 @@ class GameViewModel : ViewModel() {
 
     fun leftPress(characterXOffset: MutableState<Float>, characterYOffset: MutableState<Float>) {
         leftPress = true
-        _characterStartAngle.postValue(200f)
+        _characterStartAngle.postValue(200f) // change direction character is facing
         viewModelScope.launch {
             while (leftPress) {
                 delay(500)
@@ -112,7 +113,7 @@ class GameViewModel : ViewModel() {
 
     fun upPress(characterYOffset: MutableState<Float>, characterXOffset: MutableState<Float>) {
         upPress = true
-        _characterStartAngle.postValue(280f)
+        _characterStartAngle.postValue(280f) // change direction character is facing
         viewModelScope.launch {
             while (upPress) {
                 delay(500)
@@ -147,7 +148,7 @@ class GameViewModel : ViewModel() {
 
     fun downPress(characterYOffset: MutableState<Float>, characterXOffset: MutableState<Float>) {
         downPress = true
-        _characterStartAngle.postValue(100f)
+        _characterStartAngle.postValue(100f) // change direction character is facing
         viewModelScope.launch {
             while (downPress) {
                 delay(500)
