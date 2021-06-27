@@ -83,16 +83,16 @@ class GameViewModel : ViewModel() {
                 //Top Right
                      Range.create(350f, 425f).contains(characterXOffset.value) &&
                      Range.create(-975f, -900f).contains(characterYOffset.value) ||
-//                // Top Left
-                    Range.create(-150f, -75f).contains(characterXOffset.value) &&
-                    Range.create(-975f, -900f).contains(characterYOffset.value) ||
-//                // EnemyBox
-                    Range.create(75f, 150f).contains(characterXOffset.value) &&
-                    Range.create(-450f, -375f).contains(characterYOffset.value) ||
-//                // Bottom Left
-                    Range.create(-150f, -75f).contains(characterXOffset.value) &&
-                    Range.create(-150f, -75f).contains(characterYOffset.value) ||
-//                // Bottom Right
+                   // Top Left
+                     Range.create(-150f, -75f).contains(characterXOffset.value) &&
+                     Range.create(-975f, -900f).contains(characterYOffset.value) ||
+                   // EnemyBox
+                     Range.create(75f, 150f).contains(characterXOffset.value) &&
+                     Range.create(-450f, -375f).contains(characterYOffset.value) ||
+                   // Bottom Left
+                     Range.create(-150f, -75f).contains(characterXOffset.value) &&
+                     Range.create(-150f, -75f).contains(characterYOffset.value) ||
+                   // Bottom Right
                     Range.create(225f, 300f).contains(characterXOffset.value) &&
                     Range.create(-150f, -75f).contains(characterYOffset.value)
 
@@ -104,15 +104,37 @@ class GameViewModel : ViewModel() {
         }
     }
 
-    fun upPress(characterYOffset: MutableState<Float>) {
+    fun upPress(characterYOffset: MutableState<Float>, characterXOffset: MutableState<Float>) {
         upPress = true
         _characterStartAngle.postValue(280f)
         viewModelScope.launch {
             while (upPress) {
                 delay(500)
+
+                // implement barrier constraints
+
+                if (
                 // keep inside border
-                if (characterYOffset.value <= -1000f) characterYOffset.value += 0f else characterYOffset.value -= incrementValue
-                Log.d(logTag, "UpPress: ${characterYOffset.value}")
+                characterYOffset.value <= -1000f ||
+                //Top Right
+                    Range.create(150f, 300f).contains(characterXOffset.value) &&
+                    Range.create(-975f, -900f).contains(characterYOffset.value)
+//              // Top Left
+//                    Range.create(-150f, -75f).contains(characterXOffset.value) &&
+//                    Range.create(-975f, -900f).contains(characterYOffset.value) ||
+//              // EnemyBox
+//                    Range.create(75f, 150f).contains(characterXOffset.value) &&
+//                    Range.create(-450f, -375f).contains(characterYOffset.value) ||
+//              // Bottom Left
+//                    Range.create(-150f, -75f).contains(characterXOffset.value) &&
+//                    Range.create(-150f, -75f).contains(characterYOffset.value) ||
+//              // Bottom Right
+//                    Range.create(225f, 300f).contains(characterXOffset.value) &&
+//                    Range.create(-150f, -75f).contains(characterYOffset.value)
+
+                ) characterYOffset.value -= 0f else characterYOffset.value -= incrementValue
+
+                Log.d(logTag, "UpPress: Y: ${characterYOffset.value} x: ${characterXOffset.value}")
             }
         }
     }

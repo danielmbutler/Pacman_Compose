@@ -458,7 +458,7 @@ fun Controls(
                         detectTapGestures(
                             onPress = {
                                 if (gameStarted.value) {
-                                    gameViewModel.upPress(characterYOffset)
+                                    gameViewModel.upPress(characterYOffset, characterXOffset)
                                     tryAwaitRelease()
                                     gameViewModel.releaseUp()
                                 }
