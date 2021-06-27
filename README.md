@@ -4,7 +4,7 @@ This Pacman style game is entirely created using Jetpack Compose, still currentl
 ## Demo
 
 <p align="center">
-  <img src="https://github.com/danielmbutler/JukeBox_Compose/blob/master/resources/demo.gif" width="250" >>
+  <img src="https://github.com/danielmbutler/Pacman_Compose/blob/master/resources/demo.gif" width="250" >>
 </p>
 
 
