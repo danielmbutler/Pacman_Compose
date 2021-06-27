@@ -48,6 +48,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var enemyMovementModel: MutableState<EnemyMovementModel>
     private lateinit var gameOverDialogState: DialogState
     private lateinit var pacFoodState: PacFood
+    private lateinit var gameStatsModel: GameStatsModel
     private lateinit var foodCounter: MutableState<Int>
 
     @InternalCoroutinesApi
@@ -62,6 +63,7 @@ class MainActivity : ComponentActivity() {
                      gameStarted = remember { mutableStateOf(false) }
                      characterYOffset = remember { mutableStateOf(0f) }
                      characterXOffset = remember { mutableStateOf(0f) }
+                     gameStatsModel = GameStatsModel(characterXOffset, characterYOffset, gameStarted)
                      enemyMovementModel = remember { mutableStateOf(EnemyMovementModel()) }
                      gameOverDialogState = remember {
                         DialogState(
@@ -87,10 +89,8 @@ class MainActivity : ComponentActivity() {
                                 .padding(6.dp)
                         )
                         GameBorder(
-                            gameStarted = gameStarted,
-                            characterXOffset = characterXOffset,
-                            characterYOffset = characterYOffset,
                             gameViewModel = gameViewModel,
+                            gameStatsModel = gameStatsModel,
                             pacFoodState = pacFoodState,
                             resources = resources,
                             enemyMovementModel = enemyMovementModel.value,
@@ -98,17 +98,13 @@ class MainActivity : ComponentActivity() {
 
                         )
                         Controls(
-                            gameStarted,
-                            characterXOffset = characterXOffset,
-                            characterYOffset = characterYOffset,
+                            gameStatsModel = gameStatsModel,
                             gameViewModel = gameViewModel
                         )
                     }
 
                     gameLoop(
-                        gameStarted = gameStarted,
-                        characterXOffset = characterXOffset,
-                        characterYOffset = characterYOffset,
+                        gameStatsModel = gameStatsModel,
                         pacFoodState = pacFoodState,
                         enemyMovementModel = enemyMovementModel.value,
                         foodCounter = foodCounter
@@ -119,25 +115,17 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun gameLoop(
-        gameStarted: MutableState<Boolean>,
-        characterXOffset: MutableState<Float>,
-        characterYOffset: MutableState<Float>,
         foodCounter: MutableState<Int>,
         pacFoodState: PacFood,
         enemyMovementModel: EnemyMovementModel,
+        gameStatsModel: GameStatsModel,
     ) {
 
-        if (gameStarted.value) {
+        if (gameStatsModel.isGameStarted.value) {
             // Collision Check
-            val characterX = 958.0f / 2 - 90f + characterXOffset.value
-            val characterY = 1290.0f - 155f + characterYOffset.value
+            val characterX = 958.0f / 2 - 90f + gameStatsModel.CharacterXOffset.value
+            val characterY = 1290.0f - 155f + gameStatsModel.CharacterYOffset.value
             pacFoodState.foodList.forEach { foodModel ->
-                Log.d(
-                    "pacfood", "foodModel y: ${foodModel.yPos.toFloat()}, " +
-                            "characterOffset y: ${1290.0f / 2 + characterYOffset.value}, " +
-                            "foodModel x: ${foodModel.xPos.toFloat()}" +
-                            "characterOffset x: ${958.0f / 2 + characterXOffset.value}"
-                )
                 if (
                     Range.create(characterX, characterX + 100).contains(foodModel.xPos.toFloat()) &&
                     Range.create(characterY, characterY + 100).contains(foodModel.yPos.toFloat())
@@ -198,6 +186,9 @@ class MainActivity : ComponentActivity() {
         gameOverDialogState.message.value = message
         foodCounter.value = 100 // reset counter
         pacFoodState.initRedraw()
+        // reset character position
+        characterXOffset.value = 0f
+        characterYOffset.value = 0f
 
     }
 
@@ -205,14 +196,12 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun GameBorder(
-    gameStarted: MutableState<Boolean>,
-    characterXOffset: MutableState<Float>,
-    characterYOffset: MutableState<Float>,
     gameViewModel: GameViewModel,
     pacFoodState: PacFood,
     enemyMovementModel: EnemyMovementModel,
     resources: Resources,
-    gameOverDialogState: DialogState
+    gameOverDialogState: DialogState,
+    gameStatsModel: GameStatsModel
 ) {
     val characterStartAngle by gameViewModel.characterStartAngle.observeAsState()
 
@@ -252,14 +241,14 @@ fun GameBorder(
         //Red Enemy
         enemyMovementModel.redEnemyMovement.value = GameHelpers.enemyMovement(
             duration = 3000,
-            gamestats = GameStatsModel(characterXOffset, characterYOffset, gameStarted),
+            gamestats = gameStatsModel,
             initialXOffset = 90f
         )
 
         // Orange Enemy
         enemyMovementModel.orangeEnemyMovement.value = GameHelpers.enemyMovement(
             duration = 2500,
-            gamestats = GameStatsModel(characterXOffset, characterYOffset, gameStarted),
+            gamestats = gameStatsModel,
             initialXOffset = 70f
         )
 
@@ -278,11 +267,11 @@ fun GameBorder(
             drawArc(
                 color = Color.Yellow,
                 startAngle = characterStartAngle ?: 30f,
-                sweepAngle = if (gameStarted.value) mouthAnimation else 360f * animateCharacterSweepAngle.value,
+                sweepAngle = if (gameStatsModel.isGameStarted.value) mouthAnimation else 360f * animateCharacterSweepAngle.value,
                 useCenter = true,
                 topLeft = Offset(
-                    size.width / 2 - 90f + characterXOffset.value,
-                    size.height - 155f + characterYOffset.value
+                    size.width / 2 - 90f + gameStatsModel.CharacterXOffset.value,
+                    size.height - 155f + gameStatsModel.CharacterYOffset.value
                 ),
                 size = Size(
                     radius * 2,
@@ -429,9 +418,7 @@ fun GameBorder(
 @ExperimentalFoundationApi
 @Composable
 fun Controls(
-    gameStarted: MutableState<Boolean>,
-    characterYOffset: MutableState<Float>,
-    characterXOffset: MutableState<Float>,
+    gameStatsModel: GameStatsModel,
     gameViewModel: GameViewModel
 ) {
 
@@ -457,8 +444,11 @@ fun Controls(
                     .pointerInput(Unit) {
                         detectTapGestures(
                             onPress = {
-                                if (gameStarted.value) {
-                                    gameViewModel.upPress(characterYOffset, characterXOffset)
+                                if (gameStatsModel.isGameStarted.value) {
+                                    gameViewModel.upPress(
+                                        characterYOffset = gameStatsModel.CharacterYOffset,
+                                        characterXOffset = gameStatsModel.CharacterXOffset
+                                    )
                                     tryAwaitRelease()
                                     gameViewModel.releaseUp()
                                 }
@@ -478,8 +468,11 @@ fun Controls(
                     .pointerInput(Unit) {
                         detectTapGestures(
                             onPress = {
-                                if (gameStarted.value) {
-                                    gameViewModel.leftPress(characterXOffset, characterYOffset)
+                                if (gameStatsModel.isGameStarted.value) {
+                                    gameViewModel.leftPress(
+                                        characterYOffset = gameStatsModel.CharacterYOffset,
+                                        characterXOffset = gameStatsModel.CharacterXOffset
+                                    )
                                     tryAwaitRelease()
                                     gameViewModel.releaseLeft()
                                 }
@@ -498,8 +491,11 @@ fun Controls(
                     .pointerInput(Unit) {
                         detectTapGestures(
                             onPress = {
-                                if (gameStarted.value) {
-                                    gameViewModel.rightPress(characterXOffset, characterYOffset)
+                                if (gameStatsModel.isGameStarted.value) {
+                                    gameViewModel.rightPress(
+                                        characterYOffset = gameStatsModel.CharacterYOffset,
+                                        characterXOffset = gameStatsModel.CharacterXOffset
+                                    )
                                     tryAwaitRelease()
                                     gameViewModel.releaseRight()
                                 }
@@ -519,8 +515,11 @@ fun Controls(
                     .pointerInput(Unit) {
                         detectTapGestures(
                             onPress = {
-                                if (gameStarted.value) {
-                                    gameViewModel.downPress(characterYOffset, characterXOffset)
+                                if (gameStatsModel.isGameStarted.value) {
+                                    gameViewModel.downPress(
+                                        characterYOffset = gameStatsModel.CharacterYOffset,
+                                        characterXOffset = gameStatsModel.CharacterXOffset
+                                    )
                                     tryAwaitRelease()
                                     gameViewModel.releaseDown()
                                 }
@@ -532,14 +531,14 @@ fun Controls(
 
         // start/stop button
         Button(
-            onClick = { gameStarted.value = !gameStarted.value },
+            onClick = { gameStatsModel.isGameStarted.value = !gameStatsModel.isGameStarted.value },
             Modifier
                 .clip(CircleShape)
                 .align(Alignment.CenterVertically),
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)
         ) {
             Text(
-                text = if (gameStarted.value) "Stop" else "Start",
+                text = if (gameStatsModel.isGameStarted.value) "Stop" else "Start",
                 color = PacmanWhite,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
