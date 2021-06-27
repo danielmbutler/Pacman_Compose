@@ -118,19 +118,19 @@ class GameViewModel : ViewModel() {
                 characterYOffset.value <= -1000f ||
                 //Top Right
                     Range.create(150f, 300f).contains(characterXOffset.value) &&
-                    Range.create(-975f, -900f).contains(characterYOffset.value)
-//              // Top Left
-//                    Range.create(-150f, -75f).contains(characterXOffset.value) &&
-//                    Range.create(-975f, -900f).contains(characterYOffset.value) ||
-//              // EnemyBox
-//                    Range.create(75f, 150f).contains(characterXOffset.value) &&
-//                    Range.create(-450f, -375f).contains(characterYOffset.value) ||
-//              // Bottom Left
-//                    Range.create(-150f, -75f).contains(characterXOffset.value) &&
-//                    Range.create(-150f, -75f).contains(characterYOffset.value) ||
-//              // Bottom Right
-//                    Range.create(225f, 300f).contains(characterXOffset.value) &&
-//                    Range.create(-150f, -75f).contains(characterYOffset.value)
+                    Range.create(-975f, -900f).contains(characterYOffset.value)||
+                // Top Left
+                Range.create(-225f, -75f).contains(characterXOffset.value) &&
+                Range.create(-975f, -900f).contains(characterYOffset.value) ||
+                // EnemyBox
+                Range.create(-75f, 150f).contains(characterXOffset.value) &&
+                Range.create(-375f, -300f).contains(characterYOffset.value) ||
+                // Bottom Left
+                Range.create(-225f, -0f).contains(characterXOffset.value) &&
+                Range.create(-150f, -75f).contains(characterYOffset.value)||
+                // Bottom Right
+                    Range.create(150f, 300f).contains(characterXOffset.value) &&
+                    Range.create(-150f, -75f).contains(characterYOffset.value)
 
                 ) characterYOffset.value -= 0f else characterYOffset.value -= incrementValue
 
