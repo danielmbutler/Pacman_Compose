@@ -209,6 +209,22 @@ fun GameBorder(
                     )
             }
 
+            // Bonus Food
+            for(i in pacFoodState.bonusFoodList){
+                drawArc(
+                    color = Color.Magenta,
+                    startAngle = characterStartAngle ?: 30f,
+                    sweepAngle = 360f,
+                    useCenter = true,
+                    topLeft = Offset(i.xPos.toFloat(), i.yPos.toFloat()),
+                    size = Size(
+                        radius * i.size,
+                        radius * i.size
+                    ),
+                    style = Fill,
+                )
+            }
+
             // Enemy
             drawImage(
                 image = ImageBitmap.imageResource(res = resources, redEnemyDrawable),

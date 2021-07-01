@@ -7,9 +7,11 @@ import kotlin.random.Random
 
 data class PacFood(
     val foodList: ArrayList<PacFoodModel> = ArrayList(),
+    val bonusFoodList: ArrayList<PacFoodModel> = ArrayList() // bonus food which reverses the enemy path back to their box
 ) {
     init {
         initPacFoodList()
+        initBonusPacFoodList()
     }
 
     private fun initPacFoodList() {
@@ -29,11 +31,47 @@ data class PacFood(
         }
     }
 
-    fun initRedraw(){
+    private fun initBonusPacFoodList() {
+        bonusFoodList.clear()
+
+        // topLeft
+        bonusFoodList.add(
+            PacFoodModel(
+                xPos = 85,
+                yPos = 85,
+                size = 1f
+            )
+        )
+
+        // top right
+        bonusFoodList.add(PacFoodModel(
+            xPos = 825,
+            yPos = 85,
+            size = 1f
+        ))
+
+        // bottom left
+        bonusFoodList.add(PacFoodModel(
+            xPos = 85,
+            yPos = 1150,
+            size = 1f
+        ))
+
+        // bottom Right
+        bonusFoodList.add(PacFoodModel(
+            xPos = 825,
+            yPos = 1150,
+            size = 1f
+        ))
+
+
+    }
+
+    fun initRedraw() {
         initPacFoodList()
+        initBonusPacFoodList()
     }
 }
-
 
 
 data class PacFoodModel(
