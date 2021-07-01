@@ -112,7 +112,8 @@ fun GameBorder(
     gameOverDialogState: DialogState,
     gameStatsModel: GameStatsModel,
     redEnemyDrawable: Int,
-    orangeEnemyDrawable: Int
+    orangeEnemyDrawable: Int,
+    reverseEnemyDrawable: Int
 ) {
     val characterStartAngle by gameViewModel.characterStartAngle.observeAsState()
 
@@ -212,7 +213,7 @@ fun GameBorder(
             // Bonus Food
             for(i in pacFoodState.bonusFoodList){
                 drawArc(
-                    color = Color.Magenta,
+                    color = PacmanOrange,
                     startAngle = characterStartAngle ?: 30f,
                     sweepAngle = 360f,
                     useCenter = true,
@@ -227,12 +228,20 @@ fun GameBorder(
 
             // Enemy
             drawImage(
-                image = ImageBitmap.imageResource(res = resources, redEnemyDrawable),
+                image = if(gameStatsModel.isReverseMode.value){
+                    ImageBitmap.imageResource(res = resources, reverseEnemyDrawable)
+                } else {
+                    ImageBitmap.imageResource(res = resources, redEnemyDrawable)
+                },
                 topLeft = enemyMovementModel.redEnemyMovement.value
 
             )
             drawImage(
-                image = ImageBitmap.imageResource(res = resources, orangeEnemyDrawable),
+                image = if(gameStatsModel.isReverseMode.value){
+                    ImageBitmap.imageResource(res = resources, reverseEnemyDrawable)
+                } else {
+                    ImageBitmap.imageResource(res = resources, orangeEnemyDrawable)
+                },
                 topLeft = enemyMovementModel.orangeEnemyMovement.value
 
             )
@@ -490,10 +499,11 @@ fun Controls(
 fun enemyMovement(duration: Int, gameStats: GameStatsModel, initialXOffset: Float): Offset {
     // X Axis
     val enemyMovementXAxis by animateFloatAsState(
-        targetValue = if (gameStats.isGameStarted.value) {
-            958.0f / 2 - 90f + gameStats.CharacterXOffset.value
+        targetValue = if (gameStats.isReverseMode.value || !gameStats.isGameStarted.value) {
+            958.0f / 2 - initialXOffset // (return to original position )create spacing between enemies in box
         } else {
-            958.0f / 2 - initialXOffset // create spacing between enemies in box
+            958.0f / 2 - 90f + gameStats.CharacterXOffset.value
+
         },
         animationSpec = tween(duration, easing = LinearEasing),
         finishedListener = {
@@ -504,10 +514,11 @@ fun enemyMovement(duration: Int, gameStats: GameStatsModel, initialXOffset: Floa
 
     // y Axis
     val enemyMovementYAxis by animateFloatAsState(
-        targetValue = if (gameStats.isGameStarted.value) {
-            1290.0f - 155f + gameStats.CharacterYOffset.value
-        } else {
+        //if game has not started or the game is in reverse mode then move enemies back to enemy box
+        targetValue =  if (gameStats.isReverseMode.value || !gameStats.isGameStarted.value) {
             1290.0f / 2 + 60f
+        } else {
+            1290.0f - 155f + gameStats.CharacterYOffset.value
         },
         animationSpec = tween(duration, easing = LinearEasing),
         finishedListener = {

@@ -37,7 +37,7 @@ data class PacFood(
         // topLeft
         bonusFoodList.add(
             PacFoodModel(
-                xPos = 85,
+                xPos = 90,
                 yPos = 85,
                 size = 1f
             )
@@ -52,7 +52,7 @@ data class PacFood(
 
         // bottom left
         bonusFoodList.add(PacFoodModel(
-            xPos = 85,
+            xPos = 90,
             yPos = 1150,
             size = 1f
         ))

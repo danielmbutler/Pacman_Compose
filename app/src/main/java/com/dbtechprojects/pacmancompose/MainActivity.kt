@@ -39,6 +39,7 @@ class MainActivity : ComponentActivity() {
 
     private val gameViewModel: GameViewModel by viewModels()
     private lateinit var gameStarted: MutableState<Boolean>
+    private lateinit var reverseMode: MutableState<Boolean>
     private lateinit var characterYOffset: MutableState<Float>
     private lateinit var characterXOffset: MutableState<Float>
     private lateinit var enemyMovementModel: MutableState<EnemyMovementModel>
@@ -53,9 +54,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             gameStarted = remember { mutableStateOf(false) }
+            reverseMode = remember { mutableStateOf(false) } // used when bonus food is eaten
             characterYOffset = remember { mutableStateOf(0f) }
             characterXOffset = remember { mutableStateOf(0f) }
-            gameStatsModel = GameStatsModel(characterXOffset, characterYOffset, gameStarted)
+            gameStatsModel = GameStatsModel(characterXOffset, characterYOffset, gameStarted , reverseMode)
             enemyMovementModel = remember { mutableStateOf(EnemyMovementModel()) }
             gameOverDialogState = remember {
                 DialogState(
@@ -107,7 +109,8 @@ class MainActivity : ComponentActivity() {
                 enemyMovementModel = enemyMovementModel.value,
                 gameOverDialogState = gameOverDialogState,
                 redEnemyDrawable = R.drawable.ghost_red,
-                orangeEnemyDrawable = R.drawable.ghost_orange
+                orangeEnemyDrawable = R.drawable.ghost_orange,
+                reverseEnemyDrawable = R.drawable.ghost_reverse,
 
             )
             Controls(
@@ -132,6 +135,8 @@ class MainActivity : ComponentActivity() {
             // Collision Check
             val characterX = 958.0f / 2 - 90f + gameStatsModel.CharacterXOffset.value
             val characterY = 1290.0f - 155f + gameStatsModel.CharacterYOffset.value
+
+            // normal food collision
             pacFoodState.foodList.forEach { foodModel ->
                 if (
                     Range.create(characterX, characterX + 100).contains(foodModel.xPos.toFloat()) &&
@@ -141,9 +146,34 @@ class MainActivity : ComponentActivity() {
                     foodModel.xPos = 1000
                     foodModel.yPos = 2000
                     foodCounter.value -= 1
-                    Log.d("pacfood", "onCreate: collision ")
-                    Log.d("pacfood", "onCreate: collision ")
                 }
+            }
+
+            // bonus food collision
+            pacFoodState.bonusFoodList.forEach { foodModel ->
+                if (
+                    Range.create(characterX, characterX + 100).contains(foodModel.xPos.toFloat()) &&
+                    Range.create(characterY, characterY + 100).contains(foodModel.yPos.toFloat())
+                ) {
+                    // redraw outside box with 0 size
+                    reverseMode.value = true
+                    foodModel.xPos = 1000
+                    foodModel.yPos = 2000
+                }
+            }
+
+            // reverse mode detection
+
+            if(enemyMovementModel.orangeEnemyMovement.value.x == 409.0f &&
+               enemyMovementModel.orangeEnemyMovement.value.y == 705.0f &&
+               enemyMovementModel.redEnemyMovement.value.x == 389.0f &&
+               enemyMovementModel.redEnemyMovement.value.y == 705.0f
+            ){
+                /*
+                 if these conditions are true the game is either started or the reverse animation has finished
+                 so reverseMode should be set to false.
+                 */
+                gameStatsModel.isReverseMode.value = false
             }
 
             // enemy collision detection
@@ -172,7 +202,7 @@ class MainActivity : ComponentActivity() {
                 )
 
             ) {
-                // gameover, stop game and show dialog
+                // gameOver, stop game and show dialog
                 resetGame("GAME OVER")
 
             }
