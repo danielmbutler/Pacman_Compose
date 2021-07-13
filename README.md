@@ -16,6 +16,9 @@ This Pacman style game is entirely created using Jetpack Compose, still currentl
 * Animations - used AnimateFloatAsState, and InfiniteTransition
 * Canvas API
 
+## Article on Hashnode
+https://dbtechprojects.hashnode.dev/my-first-attempt-at-creating-a-game-with-jetpack-compose
+
 ## Resources
 https://developer.android.com/jetpack/compose/animation#overview
 https://developer.android.com/jetpack/compose/graphics
