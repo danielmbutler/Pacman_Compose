@@ -1,6 +1,11 @@
 # Pacman Compose
 This Pacman style game is entirely created using Jetpack Compose, still currently a work-in progress.
 
+<p align="left">
+  <img src="https://androidweekly.net/issues/issue-475/badge" width="250" >
+</p>
+
+
 ## Demo
 
 <p align="center">
@@ -18,6 +23,8 @@ This Pacman style game is entirely created using Jetpack Compose, still currentl
 
 ## Article on Hashnode
 https://dbtechprojects.hashnode.dev/my-first-attempt-at-creating-a-game-with-jetpack-compose
+
+Featured in Android Weekly: https://androidweekly.net/issues/issue-475
 
 ## Resources
 https://developer.android.com/jetpack/compose/animation#overview
